@@ -18,8 +18,9 @@ SDK for Hyperliquid API trading with Python.
 ```bash
 pip install hyperliquid-python-sdk
 ```
-## Configuration 
+## Configuration
 
+- Copy `examples/config.json.example` to `examples/config.json`.
 - Set the public key as the `account_address` in examples/config.json.
 - Set your private key as the `secret_key` in examples/config.json.
 - See the example of loading the config in examples/example_utils.py
