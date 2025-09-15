@@ -13,6 +13,11 @@ class API:
     def __init__(self, base_url=None, timeout=None):
         self.base_url = base_url or MAINNET_API_URL
         self.session = requests.Session()
+        # Disable usage of environment proxy settings to ensure requests hit the
+        # expected host. VCR cassettes used in tests are recorded against the
+        # public API endpoint, so honoring proxy variables would result in
+        # mismatched hosts and failing tests.
+        self.session.trust_env = False
         self.session.headers.update({"Content-Type": "application/json"})
         self._logger = logging.getLogger(__name__)
         self.timeout = timeout
