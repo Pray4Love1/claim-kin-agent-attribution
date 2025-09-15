@@ -3,7 +3,6 @@
 # Keeper Authorship: CT 2025-09-14
 
 import os
-
 from eth_account import Account
 from solcx import compile_source
 from web3 import Web3
@@ -12,11 +11,12 @@ from web3 import Web3
 priv_key_bytes = os.urandom(32)
 acct = Account.from_key(priv_key_bytes)
 
-print("Private Key (KEEP OFFLINE):", acct.key.hex())
+print("⚠️ KEEP THIS PRIVATE KEY OFFLINE ⚠️")
+print("Private Key:", acct._private_key.hex())
 print("Public Address:", acct.address)
 
 # === STEP 2: Solidity source for KinRoyalty ===
-kinroyalty_source = """
+kinroyalty_source = '''
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
@@ -39,18 +39,17 @@ contract KinRoyalty {
 
     receive() external payable {}
 }
-"""
+'''
 
 # === STEP 3: Compile contract ===
 compiled_sol = compile_source(kinroyalty_source, output_values=["abi", "bin"])
-contract_id, contract_interface = compiled_sol.popitem()
+_, contract_interface = compiled_sol.popitem()
 
 abi = contract_interface["abi"]
 bytecode = contract_interface["bin"]
 
 # === STEP 4: Connect to chain ===
-# Replace with correct RPC endpoint (offline-safe once synced)
-rpc_url = "https://mainnet.infura.io/v3/YOUR_INFURA_KEY"
+rpc_url = "https://mainnet.infura.io/v3/YOUR_INFURA_KEY"  # replace with your RPC
 w3 = Web3(Web3.HTTPProvider(rpc_url))
 assert w3.is_connected(), "Web3 not connected"
 
@@ -72,8 +71,10 @@ construct_txn = KinRoyalty.constructor(
     "gasPrice": w3.to_wei("25", "gwei"),
 })
 
-signed = w3.eth.account.sign_transaction(construct_txn, private_key=acct.key)
+signed = w3.eth.account.sign_transaction(construct_txn, private_key=acct._private_key)
 tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
 
-print("Deployment sent. TX hash:", tx_hash.hex())
-print("Await confirmation with: w3.eth.wait_for_transaction_receipt(tx_hash)")
+print("✅ Deployment sent")
+print("TX hash:", tx_hash.hex())
+print("🔍 Await confirmation with:")
+print("w3.eth.wait_for_transaction_receipt('" + tx_hash.hex() + "')")
