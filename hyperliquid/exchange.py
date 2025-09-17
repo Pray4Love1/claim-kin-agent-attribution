@@ -910,19 +910,16 @@ class Exchange(API):
         dex: str,
         oracle_pxs: Dict[str, str],
         all_mark_pxs: List[Dict[str, str]],
-        external_perp_pxs: Dict[str, str],
     ) -> Any:
         timestamp = get_timestamp_ms()
         oracle_pxs_wire = sorted(list(oracle_pxs.items()))
         mark_pxs_wire = [sorted(list(mark_pxs.items())) for mark_pxs in all_mark_pxs]
-        external_perp_pxs_wire = sorted(list(external_perp_pxs.items()))
         action = {
             "type": "perpDeploy",
             "setOracle": {
                 "dex": dex,
                 "oraclePxs": oracle_pxs_wire,
                 "markPxs": mark_pxs_wire,
-                "externalPerpPxs": external_perp_pxs_wire,
             },
         }
         signature = sign_l1_action(
@@ -1109,10 +1106,3 @@ class Exchange(API):
             signature,
             timestamp,
         )
-
-    def noop(self, nonce):
-        action = {"type": "noop"}
-        signature = sign_l1_action(
-            self.wallet, action, self.vault_address, nonce, self.expires_after, self.base_url == MAINNET_API_URL
-        )
-        return self._post_action(action, signature, nonce)
