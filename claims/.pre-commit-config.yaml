@@ -1,0 +1,7 @@
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.31.1
+    hooks:
+      - id: check-jsonschema
+        name: validate-codex-claims
+        files: ^claims/.*\.json$
+        args: ["--schemafile", "claims/schema.json"]
