@@ -222,7 +222,7 @@ class BasicAdder:
 def main():
     # Setting this to logging.DEBUG can be helpful for debugging websocket callback issues
     logging.basicConfig(level=logging.INFO)
-    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL)
+    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL)
     BasicAdder(address, info, exchange)
 
 

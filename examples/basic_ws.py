@@ -4,7 +4,7 @@ from hyperliquid.utils import constants
 
 
 def main():
-    address, info, _ = example_utils.setup(constants.TESTNET_API_URL)
+    address, info, _ = example_utils.setup(constants.MAINNET_API_URL)
     # An example showing how to subscribe to the different subscription types and prints the returned messages
     # Some subscriptions do not return snapshots, so you will not receive a message until something happens
     info.subscribe({"type": "allMids"}, print)

@@ -5,7 +5,7 @@ from hyperliquid.utils import constants
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
 
     # Change this address to a vault that you lead or a subaccount that you own
     vault = "0x1719884eb866cb12b2287399b15f7db5e7d775ea"

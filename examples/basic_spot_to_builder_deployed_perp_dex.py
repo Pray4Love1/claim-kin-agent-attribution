@@ -7,7 +7,7 @@ COLLATERAL_TOKEN = "USDC"  # nosec
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
 
     # Transfer 1.23 USDC from spot wallet to perp wallet
     transfer_result = exchange.send_asset(address, "spot", DUMMY_DEX, COLLATERAL_TOKEN, 1.23)

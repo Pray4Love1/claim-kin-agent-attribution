@@ -13,7 +13,7 @@ DUMMY_SIGNER = "0x0000000000000000000000000000000000000001"
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
 
     if ACTION == "Register":
         node_ip = "1.2.3.4"

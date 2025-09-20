@@ -4,7 +4,7 @@ from hyperliquid.utils import constants
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
 
     open_orders = info.open_orders(address)
     for open_order in open_orders:

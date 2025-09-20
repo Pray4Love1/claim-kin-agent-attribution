@@ -619,3 +619,8 @@ testing.py
 
 # End of https://www.gitignore.io/api/osx,python,pycharm,windows,visualstudio,visualstudiocode
 examples/config.json
+.env
+.env
+config.json
+config.json
+env.

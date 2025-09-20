@@ -10,7 +10,7 @@ def main():
     parser.add_argument("--is_buy", action="store_true")
     args = parser.parse_args()
 
-    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
 
     is_buy = args.is_buy
     # Place an order that should execute by setting the price very aggressively
