@@ -100,7 +100,6 @@ def test_extract_commit_author_details_reads_author_user_login():
     assert details.identifier == "node-login"
     assert details.source == "author.user"
 
-
 def test_get_commit_author_details_logs_when_missing(caplog):
     caplog.set_level(logging.WARNING)
     provider = GitHubSourceControlHistoryItemDetailsProvider(
