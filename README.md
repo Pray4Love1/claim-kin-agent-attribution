@@ -43,6 +43,20 @@ vim examples/config.json
 python examples/basic_order.py
 ```
 
+### Codex runner for KinLend vault f303
+
+Use the dedicated script to print the vault leaderboard entry and clearinghouse
+withdrawable amount that underpins the `claims/f303_attribution.json`
+attestation:
+
+```bash
+python examples/codex_runner_f303.py --owner-address 0xcd5051944f780a621ee62e39e493c489668acf4d
+```
+
+Pass the vault owner address controlling withdrawals with `--owner-address`
+whenever it changes so the reported withdrawable balance stays accurate. Omit
+the flag only if the default matches the active vault controller.
+
 ## Getting started with contributing to this repo
 
 1. Download `Poetry`: https://python-poetry.org/. 
