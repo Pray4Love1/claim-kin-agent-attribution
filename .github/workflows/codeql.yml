@@ -1,0 +1,88 @@
+name: 🛡️ Kin Guardian CodeQL x100 Mesh
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  schedule:
+    - cron: '11 3 * * 3'  # Every Wednesday 3:11 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  id-token: write
+
+env:
+  GUARDIAN_SIGNATURE: "KinGuardian@Vault.v1"
+  OMEGA_AUTHOR_ID: "0xb2b297ef9449aa0905bc318b3bd258c4804bad98"
+  ATTRIBUTION_CLAIM: "KinVaultAttributionF303"
+  REPOS: |
+    Pray4Love1/claim-kin-agent-attribution
+    Pray4Love1/SolaraKin-Genesis
+    Pray4Love1/holo-protocol-interna-
+    Pray4Love1/omega-guardian
+    Pray4Love1/lux
+    Pray4Love1/totalwine2337
+    Pray4Love1/totalwine2339
+    Pray4Love1/totalwine2338  
+
+jobs:
+  omega-guardian-scan:
+    name: 🧬 Mesh Scan Across Codex + KinVault + Holo
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript', 'solidity', 'actions' ]
+
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🧠 Initialize Omega Guardian CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          config-file: .github/codeql/codeql-config.yml
+
+      - name: ⚙️ Build (for hybrid scanning)
+        run: |
+          echo "Omega Mesh Build Triggered — Lang: ${{ matrix.language }}"
+          case "${{ matrix.language }}" in
+            python)
+              pip install -r requirements.txt || true
+              ;;
+            javascript)
+              npm install || true
+              ;;
+            solidity)
+              echo "Solidity build not required in interpreted mesh."
+              ;;
+            *)
+              echo "Default mesh config."
+              ;;
+          esac
+
+      - name: 🧪 Perform Kin CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "KinGuardian/${{ matrix.language }}"
+
+      - name: 🧾 Sign Mesh Scan with Codex Lineage
+        run: |
+          echo "🔒 Scan signed by ${GUARDIAN_SIGNATURE}" >> omega_scan.log
+          echo "📍 Author: ${OMEGA_AUTHOR_ID}" >> omega_scan.log
+          echo "🧬 Attribution: ${ATTRIBUTION_CLAIM}" >> omega_scan.log
+          echo "📡 Repo Mesh: ${REPOS}" >> omega_scan.log
+          echo "✅ Timestamp: $(date -u)" >> omega_scan.log
+          echo "🧱 Codex Hash: $(git rev-parse HEAD)" >> omega_scan.log
+
+      - name: 💾 Archive Scan Output for Vault notarization
+        uses: actions/upload-artifact@v4
+        with:
+          name: omega_scan_report_${{ matrix.language }}
+          path: omega_scan.log
+
