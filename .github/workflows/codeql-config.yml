@@ -1,0 +1,29 @@
+name: "Kin Guardian CodeQL Mesh"
+
+# This controls which CodeQL query packs to run.
+# `security-and-quality` is the standard bundle: security vulns, correctness, maintainability.
+queries:
+  - uses: security-and-quality
+
+# Directories and files to include in analysis.
+# Adjust paths as your repo evolves.
+paths:
+  - scripts/
+  - holo/
+  - vaults/
+  - codex/
+  - tests/
+  - codex_runner_f303.py
+
+# Paths to exclude from analysis (e.g., vendored deps, build artifacts).
+paths-ignore:
+  - .venv/
+  - .mypy_cache/
+  - .pytest_cache/
+  - node_modules/
+  - dist/
+  - build/
+
+# Extra settings
+# This keeps analysis consistent across PRs and master pushes.
+disable-default-queries: false
