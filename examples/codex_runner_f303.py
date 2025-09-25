@@ -21,10 +21,12 @@ from typing import Any, Dict
 
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
-
-DEFAULT_VAULT_ID = "f303"
-DEFAULT_OWNER_ADDRESS = "0xcd5051944f780a621ee62e39e493c489668acf4d"
-
+from hyperliquid.utils.f303_helpers import (
+    DEFAULT_OWNER_ADDRESS,
+    DEFAULT_VAULT_ID,
+    fetch_leaderboard,
+    format_withdrawable,
+)
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -47,7 +49,6 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
 def fetch_leaderboard(info: Info, vault_id: str) -> Dict[str, Any]:
     """Return the leaderboard payload for a vault."""
     payload = {"type": "vaultLeaderboard", "vault": vault_id}
@@ -55,7 +56,6 @@ def fetch_leaderboard(info: Info, vault_id: str) -> Dict[str, Any]:
     if not isinstance(leaderboard, dict):
         raise TypeError("Unexpected leaderboard response type: %r" % type(leaderboard))
     return leaderboard
-
 
 def format_withdrawable(raw_withdrawable: Any) -> str:
     if raw_withdrawable is None:
@@ -65,7 +65,6 @@ def format_withdrawable(raw_withdrawable: Any) -> str:
     except (InvalidOperation, ValueError):
         return f"Withdrawable (unparsed): {raw_withdrawable}"
     return f"Withdrawable: {withdrawable_decimal.normalize()}"
-
 
 def main() -> None:
     args = parse_args()

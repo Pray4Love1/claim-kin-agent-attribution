@@ -57,6 +57,14 @@ Pass the vault owner address controlling withdrawals with `--owner-address`
 whenever it changes so the reported withdrawable balance stays accurate. Omit
 the flag only if the default matches the active vault controller.
 
+If you prefer to derive the owner from a local wallet, export your private key
+and run the helper at the repository root:
+
+```bash
+export PRIVATE_KEY=0xYourPrivateKey
+python f303_claim_route.py
+```
+
 ## Getting started with contributing to this repo
 
 1. Download `Poetry`: https://python-poetry.org/. 
