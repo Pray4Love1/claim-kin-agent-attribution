@@ -1,0 +1,27 @@
+name: Codex PURR Vault Deploy
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Deploy Sovereign PURR
+        run: |
+          forge build
+          forge create contracts/P∞rr.sol:SovereignPurr \
+            --constructor-args $ROYALTY_ADDRESS 250 \
+            --private-key $PRIVATE_KEY \
+            --rpc-url $RPC
+
+      - name: Upload Attribution
+        uses: actions/upload-artifact@v3
+        with:
+          name: attribution
+          path: attribution/PURR_attribution.json
