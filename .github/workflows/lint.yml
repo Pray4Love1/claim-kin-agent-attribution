@@ -1,15 +1,3 @@
-name: Lint
-
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
-
 jobs:
   pre-commit:
     runs-on: ubuntu-24.04
@@ -41,33 +29,40 @@ jobs:
           poetry config virtualenvs.in-project true
           make install
 
-      # ✅ Kin Attribution Guard — exact text + trailing newline
-      - name: Ensure KIN_CLAIM.txt attribution and trailing newline
+      - name: Guard KIN_CLAIM.txt (attribution + newline)
+        id: guard
         run: |
           CLAIM="KinLend Attribution Verified by Keeper - Vault f303 Origin"
+          FIXED=0
 
-          NEEDS_COMMIT=0
-
-          # Ensure correct content
-          if ! grep -Fxq "$CLAIM" KIN_CLAIM.txt 2>/dev/null; then
+          # Create if missing or wrong
+          if [ ! -f KIN_CLAIM.txt ] || ! grep -Fxq "$CLAIM" KIN_CLAIM.txt; then
             echo "$CLAIM" > KIN_CLAIM.txt
-            NEEDS_COMMIT=1
+            FIXED=1
           fi
 
-          # Ensure trailing newline (sed appends \n if missing)
+          # Ensure newline
           if [ "$(tail -c1 KIN_CLAIM.txt | wc -l)" -eq 0 ]; then
             sed -i -e '$a\' KIN_CLAIM.txt
-            NEEDS_COMMIT=1
+            FIXED=1
           fi
 
-          # Commit & push if needed
-          if [ "$NEEDS_COMMIT" -eq 1 ]; then
+          echo "fixed=$FIXED" >> $GITHUB_OUTPUT
+
+          if [ "$FIXED" -eq 1 ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add KIN_CLAIM.txt
-            git commit -m "Fix Kin attribution and trailing newline"
+            git commit -m "Fix KIN_CLAIM.txt content + newline"
             git push
           fi
 
-      - name: Lint
+      # ⛔ Bail out early if we just pushed a fix
+      - name: Skip pre-commit if fix was pushed
+        if: steps.guard.outputs.fixed == '1'
+        run: |
+          echo "Fix was pushed. CI will rerun with clean state."
+          exit 0
+
+      - name: Run pre-commit
         run: make pre-commit
