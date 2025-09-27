@@ -1,3 +1,15 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   pre-commit:
     runs-on: ubuntu-24.04
@@ -35,29 +47,26 @@ jobs:
           CLAIM="KinLend Attribution Verified by Keeper - Vault f303 Origin"
           FIXED=0
 
-          # Create if missing or wrong
+          # Create or overwrite if missing/wrong
           if [ ! -f KIN_CLAIM.txt ] || ! grep -Fxq "$CLAIM" KIN_CLAIM.txt; then
             echo "$CLAIM" > KIN_CLAIM.txt
             FIXED=1
           fi
 
-          # Ensure newline
-          if [ "$(tail -c1 KIN_CLAIM.txt | wc -l)" -eq 0 ]; then
-            sed -i -e '$a\' KIN_CLAIM.txt
+          # Force trailing newline (safe even if already present)
+          sed -i -e '$a\' KIN_CLAIM.txt
+
+          if ! git diff --quiet; then
             FIXED=1
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add KIN_CLAIM.txt
+            git commit -m "Fix KIN_CLAIM.txt content and newline"
+            git push
           fi
 
           echo "fixed=$FIXED" >> $GITHUB_OUTPUT
 
-          if [ "$FIXED" -eq 1 ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add KIN_CLAIM.txt
-            git commit -m "Fix KIN_CLAIM.txt content + newline"
-            git push
-          fi
-
-      # ⛔ Bail out early if we just pushed a fix
       - name: Skip pre-commit if fix was pushed
         if: steps.guard.outputs.fixed == '1'
         run: |
