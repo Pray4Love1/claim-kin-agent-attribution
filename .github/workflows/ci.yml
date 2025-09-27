@@ -12,23 +12,22 @@ concurrency:
 
 jobs:
   tests:
+    name: 🧪 Python Tests
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        # https://devguide.python.org/versions/
-        # 3.9: lower bound = lowest Python non-EOL version
-        # 3.13: upper bound = latest Python stable version
         python-version: ['3.9', '3.13']
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install poetry
+      - name: Install Poetry
         run: make poetry-download
 
       - name: Set up cache
@@ -43,13 +42,45 @@ jobs:
           poetry install
 
       - name: Run tests
-        run: |
-          make test
+        run: make test
 
-      - name: Archive Coverage Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Archive Coverage Report
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-html-report-${{ matrix.python-version }}
           path: htmlcov
           retention-days: 5
+
+
+  # ----------------------------------------------------
+  # OPTIONAL: Dependency submission to GitHub Dependency Graph
+  # ----------------------------------------------------
+  submit-python-dependencies:
+    name: 📦 Submit Python Dependencies
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'Pray4Love1'  # optional: only run in your repo
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Poetry
+        run: curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Export dependencies to requirements.txt
+        run: poetry export --without-hashes --format=requirements.txt > requirements.txt
+
+      - name: Submit dependencies to GitHub Dependency Graph
+        uses: github/dependency-submission-action@v1
+        with:
+          requirements: requirements.txt
