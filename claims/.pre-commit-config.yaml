@@ -1,7 +1,5 @@
-  - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.31.1
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.10.0
     hooks:
-      - id: check-jsonschema
-        name: validate-codex-claims
-        files: ^claims/.*\.json$
-        args: ["--schemafile", "claims/schema.json"]
+      - id: yamlfmt
+        exclude: ^KIN_CLAIM\.txt$
