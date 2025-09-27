@@ -1,7 +1,9 @@
 import logging
 from typing import Dict
 
-from hyperliquid import github as github_module
+import pytest
+
+github_module = pytest.importorskip("hyperliquid.github")
 from hyperliquid.github import (
     CommitAuthor,
     GitHubSourceControlHistoryItemDetailsProvider,
