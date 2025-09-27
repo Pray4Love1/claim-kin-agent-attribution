@@ -1,14 +1,4 @@
-"""Codex helper for inspecting the KinLend vault f303 leaderboard.
-
-Run this script to print the Hyperliquid vault leaderboard response and the
-clearinghouse withdrawable balance for the vault owner.
-
-Example:
-    python examples/codex_runner_f303.py --owner-address 0xYourVaultOwner
-
-If you omit ``--owner-address``, the script defaults to the KinLend owner used
-in Keeper attestations.
-"""
+"""Codex helper for inspecting the KinLend vault f303 leaderboard."""
 
 from __future__ import annotations
 
@@ -22,7 +12,7 @@ from hyperliquid.utils.f303_helpers import (
     DEFAULT_VAULT_ID,
     fetch_leaderboard,
 )
-from format_utils import format_withdrawable  # <- Import the utility
+from examples.format_utils import format_withdrawable  # ✅ updated
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,10 +48,7 @@ def main() -> None:
     print(f"\nFetching clearinghouse state for owner {args.owner_address}...")
     clearinghouse_state = info.user_state(args.owner_address)
     if not isinstance(clearinghouse_state, dict):
-        print(
-            "Unexpected clearinghouse state type:",
-            type(clearinghouse_state).__name__,
-        )
+        print("Unexpected clearinghouse state type:", type(clearinghouse_state).__name__)
         return
 
     withdrawable_message = format_withdrawable(clearinghouse_state.get("withdrawable"))
