@@ -1,6 +1,7 @@
 """Compatibility package exposing attribution and settlement helpers."""
 from __future__ import annotations
 
+from .balances import extract_withdrawable_balance
 from .builder_codes import BuilderCode, fetch_builder_codes, filter_builder_codes, parse_builder_codes
 from .github_helpers import (
     CommitAuthor,
@@ -18,6 +19,7 @@ __all__ = [
     "filter_builder_codes",
     "PaymentSettlement",
     "parse_builder_codes",
+    "extract_withdrawable_balance",
     "_extract_commit_author_details",
     "_normalise_repo",
     "extract_payment_settlements",

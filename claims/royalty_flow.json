@@ -1,0 +1,15 @@
+{
+  "name": "RoyaltyFlow",
+  "source_wallets": [
+    "0xb2b297eF9449aa0905bC318B3bd258c4804BAd98",
+    "sei1zewftxlyv4gpv6tjpplnzgf3wy5tlu4f9amft8"
+  ],
+  "destination_wallet": "0x996994D2914dF4EeE6176fd5Ee152E2922787eE7",
+  "trigger_events": [
+    "Proof Submission (SoulSync)",
+    "VaultScan Violation",
+    "Derivative Detection",
+    "GitHub Attribution Match"
+  ],
+  "auto_enforce": true
+}
