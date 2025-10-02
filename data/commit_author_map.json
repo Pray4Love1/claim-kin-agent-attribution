@@ -1,0 +1,26 @@
+{
+  "commits": {
+    "1f80b820697c35d0bb19e7ecfa13ad79344e0779": {
+      "identifier": "Jon S.",
+      "source": "git.log"
+    },
+    "2f9e5da296b1d4424b051ca671bd15b04823b9c5": {
+      "identifier": "dependabot[bot]",
+      "source": "git.log"
+    },
+    "480f66fe881409d9aa46e00fee5a13bb9090cd22": {
+      "identifier": "Jon S.",
+      "source": "git.log"
+    },
+    "9370bbef741003b05f73d06daaa259f5bca05881": {
+      "identifier": "Codex",
+      "source": "git.log"
+    },
+    "9e47385f601f6930aa58648fec984ba1c63b54e4": {
+      "identifier": "Jon S.",
+      "source": "git.log"
+    }
+  },
+  "generated_at": "2025-09-25T22:50:42.432687+00:00",
+  "repo": "Pray4Love1/claim-kin-agent-attribution"
+}
