@@ -1,101 +1,59 @@
 #!/usr/bin/env python3
-"""Inspect the KinLend f303 vault claim route with a local wallet."""
+"""Codex helper for inspecting the KinLend vault f303 leaderboard.
+
+This script is bound to your vault/controller and not reusable by others.
+"""
 
 from __future__ import annotations
 
 import argparse
-import os
+from decimal import Decimal, InvalidOperation
 from pprint import pprint
-from typing import Optional
-
-from eth_account import Account
+from typing import Any, Dict
 
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
-from hyperliquid.utils.f303_helpers import (
-    DEFAULT_OWNER_ADDRESS,
-    DEFAULT_VAULT_ID,
-    fetch_leaderboard,
-    format_withdrawable,
-)
+
+DEFAULT_VAULT_ID = "f303"
+DEFAULT_OWNER_ADDRESS = "0x996994D2914DF4eEE6176FD5eE152e2922787EE7"
 
 
-def derive_owner_from_env() -> Optional[str]:
-    """Return the wallet address derived from ``PRIVATE_KEY`` if available."""
-    private_key = os.environ.get("PRIVATE_KEY")
-    if not private_key:
-        return None
-
-    try:
-        return Account.from_key(private_key).address
-    except ValueError as exc:  # pragma: no cover - defensive guard
-        raise SystemExit(f"Failed to load account from PRIVATE_KEY: {exc}") from exc
-
-
-def parse_args(env_owner: Optional[str]) -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Query the KinLend f303 leaderboard and clearinghouse withdrawable value "
-            "used in the attribution claim."
-        )
+        description="Fetch the KinLend vault leaderboard entry and withdrawable state."
     )
-    parser.add_argument(
-        "--vault-id",
-        default=DEFAULT_VAULT_ID,
-        help="Hyperliquid vault identifier to query (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--base-url",
-        default=constants.MAINNET_API_URL,
-        help="Hyperliquid API base URL (defaults to mainnet).",
-    )
-    parser.add_argument(
-        "--owner-address",
-        default=env_owner or DEFAULT_OWNER_ADDRESS,
-        help=(
-            "Vault owner address used when requesting the clearinghouse state. "
-            "Defaults to the PRIVATE_KEY-derived wallet if present."
-        ),
-    )
+    parser.add_argument("--vault-id", default=DEFAULT_VAULT_ID)
+    parser.add_argument("--owner-address", default=DEFAULT_OWNER_ADDRESS)
+    parser.add_argument("--base-url", default=constants.MAINNET_API_URL)
     return parser.parse_args()
 
 
+def fetch_leaderboard(info: Info, vault_id: str) -> Dict[str, Any]:
+    payload = {"type": "vaultLeaderboard", "vault": vault_id}
+    leaderboard = info.post("/info", payload)
+    if not isinstance(leaderboard, dict):
+        raise TypeError(f"Unexpected leaderboard response type: {type(leaderboard)}")
+    return leaderboard
+
+
+def format_withdrawable(raw_withdrawable: Any) -> str:
+    if raw_withdrawable is None:
+        return "Withdrawable amount unavailable."
+    try:
+        withdrawable_decimal = Decimal(str(raw_withdrawable))
+    except (InvalidOperation, ValueError):
+        return f"Withdrawable (unparsed): {raw_withdrawable}"
+    return f"Withdrawable: {withdrawable_decimal.normalize()}"
+
+
 def main() -> None:
-    derived_owner = derive_owner_from_env()
-    args = parse_args(derived_owner)
-
+    args = parse_args()
     info = Info(args.base_url, skip_ws=True)
-
-    if derived_owner:
-        print(f"🔐 Derived owner address from PRIVATE_KEY: {derived_owner}")
-        if args.owner_address.lower() != derived_owner.lower():
-            print(
-                "⚠️ --owner-address overrides the PRIVATE_KEY-derived wallet. "
-                "Ensure this matches the active vault controller."
-            )
-    else:
-        print(
-            "⚠️ PRIVATE_KEY not set; falling back to the configured owner address. "
-            "Pass --owner-address explicitly if the vault controller has rotated."
-        )
-
-    print(f"\nRequesting leaderboard for vault '{args.vault_id}' at {args.base_url}...")
     leaderboard = fetch_leaderboard(info, args.vault_id)
     pprint(leaderboard)
-
-    print(f"\nFetching clearinghouse state for owner {args.owner_address}...")
     clearinghouse_state = info.user_state(args.owner_address)
-    if not isinstance(clearinghouse_state, dict):
-        print(
-            "Unexpected clearinghouse state type:",
-            type(clearinghouse_state).__name__,
-        )
-        return
-
     withdrawable_message = format_withdrawable(clearinghouse_state.get("withdrawable"))
     print(withdrawable_message)
-
-    print("\n📄 Reference: claims/f303_attribution.json")
 
 
 if __name__ == "__main__":

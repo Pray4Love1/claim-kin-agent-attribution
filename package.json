@@ -1,7 +1,9 @@
 {
-  "devDependencies": {
-    "@types/node": "^24.4.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
-  }
+  "name": "codex-attribution",
+  "version": "1.0.0",
+  "description": "Codex attribution and vault claim tools (Keeper only)",
+  "scripts": {
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "dependencies": {}
 }
