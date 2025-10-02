@@ -1,0 +1,47 @@
+name: Attribution & Authorship Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  attribution:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+          pip install -e .
+
+      - name: Generate commit author map
+        run: python scripts/generate_commit_authors.py --limit 50 --output data/commit_author_map.json
+
+      - name: Run attribution tests
+        run: pytest tests/github_helpers_test.py --maxfail=1 --disable-warnings --tb=short
+
+      - name: Archive commit author map
+        if: always()
+        run: |
+          mkdir -p artifacts
+          cp data/commit_author_map.json artifacts/ || true
+
+      - name: Upload commit author map
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: commit-author-map
+          path: artifacts/
