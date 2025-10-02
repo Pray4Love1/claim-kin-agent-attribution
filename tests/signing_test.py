@@ -1,6 +1,8 @@
-import eth_account
 import pytest
-from eth_utils import to_hex
+
+eth_utils = pytest.importorskip("eth_utils")
+eth_account = pytest.importorskip("eth_account")
+to_hex = eth_utils.to_hex
 
 from hyperliquid.utils.signing import (
     OrderRequest,
