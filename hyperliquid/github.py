@@ -1,10 +1,10 @@
-"""Utilities for fetching commit author information from GitHub."""
+"""GitHub helper utilities for commit author attribution and settlement analytics."""
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Mapping, Optional
 
 try:  # pragma: no cover - exercised indirectly in tests
     import requests
@@ -26,37 +26,35 @@ except ImportError:  # pragma: no cover - lightweight fallback for restricted en
 
     requests = _RequestsModule()  # type: ignore[assignment]
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class CommitAuthor:
-    """Represents an author returned from the GitHub commits API."""
+    """Container describing the author attached to a Git commit."""
 
     identifier: str
     source: str
 
 
-def _extract_identifier(candidate: Optional[dict], source: str) -> Optional[CommitAuthor]:
-    """Extract a usable identifier from a GitHub API payload."""
-
+def _extract_identifier(candidate: Optional[Mapping[str, object]], source: str) -> Optional[CommitAuthor]:
+    """Extract a usable identifier from a GitHub API payload mapping."""
     if not candidate:
         return None
-    login = candidate.get("login")
+    login = candidate.get("login") if isinstance(candidate, Mapping) else None
     if isinstance(login, str) and login:
         return CommitAuthor(identifier=login, source=source)
-    name = candidate.get("name")
+    name = candidate.get("name") if isinstance(candidate, Mapping) else None
     if isinstance(name, str) and name:
         return CommitAuthor(identifier=name, source=source)
-    email = candidate.get("email")
+    email = candidate.get("email") if isinstance(candidate, Mapping) else None
     if isinstance(email, str) and email:
         return CommitAuthor(identifier=email, source=source)
     return None
 
 
-def _extract_commit_author_details(commit_payload: dict) -> Optional[CommitAuthor]:
+def _extract_commit_author_details(commit_payload: Mapping[str, object]) -> Optional[CommitAuthor]:
     """Derive commit author information from a GitHub commit payload."""
-
     # Prefer the author field when available as it contains the GitHub login.
     details = _extract_identifier(commit_payload.get("author"), "author")
     if details is not None:
@@ -80,7 +78,6 @@ def _extract_commit_author_details(commit_payload: dict) -> Optional[CommitAutho
 
 def _normalise_repo(repo: str) -> str:
     """Normalise a GitHub repository identifier into the form ``owner/name``."""
-
     repo = repo.strip()
     if repo.endswith("/"):
         repo = repo[:-1]
@@ -110,25 +107,23 @@ class GitHubSourceControlHistoryItemDetailsProvider:
 
     def get_commit_author_details(self, repo: str, sha: str) -> Optional[CommitAuthor]:
         """Return author details for the given commit, or ``None`` if unavailable."""
-
         normalised_repo = _normalise_repo(repo)
         url = self._API_URL_TEMPLATE.format(repo=normalised_repo, sha=sha)
         try:
             response = self._session.get(url, headers={"Accept": "application/vnd.github+json"}, timeout=10)
             response.raise_for_status()
-        except requests.RequestException as exc:  # type: ignore[attr-defined]
-            LOGGER.warning("Failed to fetch GitHub commit %s@%s: %s", normalised_repo, sha, exc)
+        except Exception as exc:  # network or request errors
+            _LOGGER.warning("Failed to fetch GitHub commit %s@%s: %s", normalised_repo, sha, exc)
             return None
 
         payload = response.json()
         details = _extract_commit_author_details(payload)
         if details is None:
-            LOGGER.warning("Commit %s@%s does not expose an author", normalised_repo, sha)
+            _LOGGER.warning("Commit %s@%s does not expose an author", normalised_repo, sha)
         return details
 
     def get_commit_authors(self, repo: str, shas: Iterable[str]) -> Dict[str, Optional[CommitAuthor]]:
         """Fetch author information for multiple commits in the provided repository."""
-
         results: Dict[str, Optional[CommitAuthor]] = {}
         for sha in shas:
             results[sha] = self.get_commit_author_details(repo, sha)
@@ -136,6 +131,5 @@ class GitHubSourceControlHistoryItemDetailsProvider:
 
     def get_commit_author(self, repo: str, sha: str) -> Optional[str]:
         """Compatibility helper returning only the author identifier."""
-
         details = self.get_commit_author_details(repo, sha)
         return None if details is None else details.identifier
