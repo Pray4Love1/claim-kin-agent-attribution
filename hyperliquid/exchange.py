@@ -1,9 +1,12 @@
 import json
 import logging
 import secrets
+from typing import TYPE_CHECKING, Any as TypingAny
 
-import eth_account
-from eth_account.signers.local import LocalAccount
+if TYPE_CHECKING:  # pragma: no cover - import for type checking only
+    from eth_account.signers.local import LocalAccount
+else:  # pragma: no cover - runtime fallback when eth-account is unavailable
+    LocalAccount = TypingAny  # type: ignore[misc,assignment]
 
 from hyperliquid.api import API
 from hyperliquid.info import Info
@@ -18,6 +21,7 @@ from hyperliquid.utils.signing import (
     OrderWire,
     ScheduleCancelAction,
     float_to_usd_int,
+    get_l1_action_data,
     get_timestamp_ms,
     order_request_to_order_wire,
     order_wires_to_order_action,
@@ -154,6 +158,35 @@ class Exchange(API):
             signature,
             timestamp,
         )
+
+    def bulk_orders_tx(self, order_requests: List[OrderRequest], builder: Optional[BuilderInfo] = None) -> Any:
+        """Prepare the typed data payload for a batch of orders without signing.
+
+        This helper mirrors :meth:`bulk_orders` but returns the structured
+        ``eth_account`` typed-data payload instead of posting the action. The
+        caller can then forward the payload to an external signer, such as a
+        hardware wallet, and submit the signed transaction separately.
+        """
+
+        order_wires: List[OrderWire] = [
+            order_request_to_order_wire(order, self.info.name_to_asset(order["coin"])) for order in order_requests
+        ]
+        timestamp = get_timestamp_ms()
+
+        if builder:
+            builder["b"] = builder["b"].lower()
+        order_action = order_wires_to_order_action(order_wires, builder)
+
+        data = get_l1_action_data(
+            order_action,
+            self.vault_address,
+            timestamp,
+            self.expires_after,
+            self.base_url == MAINNET_API_URL,
+        )
+
+        logging.debug("bulk_orders_tx generated payload: %s", data)
+        return data
 
     def modify_order(
         self,
@@ -599,7 +632,15 @@ class Exchange(API):
             timestamp,
         )
 
+    def _require_eth_account(self) -> "eth_account":  # pragma: no cover - helper for optional dependency
+        try:
+            import eth_account  # type: ignore[import-not-found]
+        except ImportError as exc:  # pragma: no cover - dependency missing
+            raise RuntimeError("eth-account is required for agent approval flows") from exc
+        return eth_account
+
     def approve_agent(self, name: Optional[str] = None) -> Tuple[Any, str]:
+        eth_account = self._require_eth_account()
         agent_key = "0x" + secrets.token_hex(32)
         account = eth_account.Account.from_key(agent_key)
         timestamp = get_timestamp_ms()
