@@ -1,0 +1,18 @@
+{
+  "token": "PURR",
+  "origin": "SolaraKin / KinKey Sovereign Layer",
+  "creator": "The Keeper",
+  "address": "0x996994D2914DF4eEE6176FD5eE152e2922787EE7",
+  "license": "UNLICENSED",
+  "royalty": {
+    "receiver": "0x996994D2914DF4eEE6176FD5eE152e2922787EE7",
+    "basis_points": 800
+  },
+  "deployments": [
+    {
+      "network": "Hyperliquid",
+      "type": "HIP-1",
+      "linked": true
+    }
+  ]
+}
