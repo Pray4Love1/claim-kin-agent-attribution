@@ -1,0 +1,9 @@
+{
+  "name": "codex-attribution",
+  "version": "1.0.0",
+  "description": "Codex attribution and vault claim tools (Keeper only)",
+  "scripts": {
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "dependencies": {}
+}

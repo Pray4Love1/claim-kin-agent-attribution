@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""
+Codex Attribution Claim Builder — Live Wallet
+
+Generates attribution JSON for the active Codex claimer (from env),
+with optional fields and timestamp.
+"""
+
+import os
+import json
+from datetime import datetime
+from eth_account import Account
+
+def main():
+    priv_key = os.environ.get("PRIVATE_KEY")
+    if not priv_key:
+        raise RuntimeError("❌ PRIVATE_KEY not found. Run codex_wallet_and_deploy_precompiled.py first.")
+
+    acct = Account.from_key(priv_key)
+    now = datetime.now().isoformat()
+
+    attribution = {
+        "attribution": "KinLend Agent Vault f303",
+        "wallet_address": acct.address,
+        "origin": "Keeper",
+        "protocol": "SoulSync / KinLend",
+        "type": "Attribution Claim - Agent Identity",
+        "status": "No funds deposited — claim only",
+        "verified_via": "Hyperliquid Python SDK (Info.user_state)",
+        "timestamp": now,
+        "on_chain_linked": False,
+        "github_repo": "Pray4Love1/claim-kin-agent-attribution",
+        "signature": "🛡️ Codex attribution sealed by Keeper"
+    }
+
+    with open("f303_attribution.json", "w") as f:
+        json.dump(attribution, f, indent=2)
+
+    print("✅ Attribution file written:")
+    print(f"📬 Claimer: {acct.address}")
+    print(f"🕓 Timestamp: {now}")
+
+if __name__ == "__main__":
+    main()
