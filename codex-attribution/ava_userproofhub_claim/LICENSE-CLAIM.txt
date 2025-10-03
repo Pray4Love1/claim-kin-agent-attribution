@@ -1,0 +1,10 @@
+SoulSync Attribution License v1.0
+
+Any deployment or derivative of the KinKey/SoulSync proof verification contracts
+must:
+1. Preserve original authorship notices and SPDX identifiers.
+2. Remit 5% of protocol revenue derived from the verification logic to the
+   SoulSync multisig (0x996994D2914DF4eEE6176FD5eE152e2922787EE7).
+3. Publish reproducible build instructions and commit history for audits.
+
+Violations are subject to public attribution via the Codex program.

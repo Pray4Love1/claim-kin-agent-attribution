@@ -1,4 +1,4 @@
-name: CI
+zname: CI
 
 on:
   push:
@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
+      
+        # Lower bound and latest Python stable
         python-version: ['3.9', '3.13']
 
     steps:
@@ -41,10 +43,12 @@ jobs:
           poetry config virtualenvs.in-project true
           poetry install
 
-      - name: Run tests
-        run: make test
+      - name: Run tests with coverage
+        run: |
+          # Run pytest with coverage so htmlcov/ is always created
+          poetry run pytest --cov=your_package --cov-report=term-missing --cov-report=html
 
-      - name: Archive Coverage Report
+      - name: Archive Coverage Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
