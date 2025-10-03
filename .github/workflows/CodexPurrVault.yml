@@ -21,7 +21,7 @@ jobs:
             --rpc-url $RPC
 
       - name: Upload Attribution
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: attribution
           path: attribution/PURR_attribution.json
