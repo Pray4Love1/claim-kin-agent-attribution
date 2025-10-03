@@ -1,8 +1,18 @@
-"""Utility helpers for KinLend vault f303 runner output formatting."""
+"""Codex helper for inspecting the KinLend vault f303 leaderboard."""
 
 from __future__ import annotations
 from decimal import Decimal
+import argparse
+from pprint import pprint
 
+from hyperliquid.info import Info
+from hyperliquid.utils import constants
+from hyperliquid.utils.f303_helpers import (
+    DEFAULT_OWNER_ADDRESS,
+    DEFAULT_VAULT_ID,
+    fetch_leaderboard,
+)
+from examples.format_utils import format_withdrawable  # ✅ already updated
 
 def format_withdrawable(withdrawable: str | None) -> str:
     """Format withdrawable amounts without scientific notation.
@@ -25,9 +35,8 @@ def format_withdrawable(withdrawable: str | None) -> str:
     return f"Withdrawable: {fixed_point}"
 
 
-DEFAULT_OWNER_ADDRESS = "0xKinLendVaultOwner"   # TODO: update if controller changes
+DEFAULT_OWNER_ADDRESS = "0xKinLendVaultOwner"   # ✅ Update this if controller changes
 DEFAULT_VAULT_ID = "f303"
-
 
 __all__ = [
     "format_withdrawable",
