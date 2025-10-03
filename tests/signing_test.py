@@ -18,7 +18,6 @@ from hyperliquid.utils.signing import (
 )
 from hyperliquid.utils.types import Cloid
 
-
 def test_phantom_agent_creation_matches_production():
     timestamp = 1677777606040
     order_request: OrderRequest = {

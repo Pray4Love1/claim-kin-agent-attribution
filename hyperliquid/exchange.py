@@ -113,32 +113,24 @@ class Exchange(API):
     def set_expires_after(self, expires_after: Optional[int]) -> None:
         self.expires_after = expires_after
 
-    def order(
+    def bulk_orders_tx(
         self,
-        name: str,
-        is_buy: bool,
-        sz: float,
-        limit_px: float,
-        order_type: OrderType,
-        reduce_only: bool = False,
-        cloid: Optional[Cloid] = None,
+        order_requests: List[OrderRequest],
         builder: Optional[BuilderInfo] = None,
-    ) -> Any:
-        order: OrderRequest = {
-            "coin": name,
-            "is_buy": is_buy,
-            "sz": sz,
-            "limit_px": limit_px,
-            "order_type": order_type,
-            "reduce_only": reduce_only,
-        }
-        if cloid:
-            order["cloid"] = cloid
-        return self.bulk_orders([order], builder)
+    ) -> Dict[str, Any]:
+        """Return the unsigned payload required to submit a batch of orders.
 
-    def bulk_orders(self, order_requests: List[OrderRequest], builder: Optional[BuilderInfo] = None) -> Any:
+        Mirrors :meth:`bulk_orders` but does not sign or post the action.
+        Instead, it returns a dictionary containing:
+
+          - the wire-formatted action,
+          - the nonce that must accompany the submission,
+          - the EIP-712 typed-data payload for offline signing,
+          - the vault address and expires_after context.
+        """
         order_wires: List[OrderWire] = [
-            order_request_to_order_wire(order, self.info.name_to_asset(order["coin"])) for order in order_requests
+            order_request_to_order_wire(order, self.info.name_to_asset(order["coin"]))
+            for order in order_requests
         ]
         timestamp = get_timestamp_ms()
 
@@ -146,16 +138,7 @@ class Exchange(API):
             builder["b"] = builder["b"].lower()
         order_action = order_wires_to_order_action(order_wires, builder)
 
-        signature = sign_l1_action(
-            self.wallet,
-            order_action,
-            self.vault_address,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-
-        return self._post_action(
+        typed_data = get_l1_action_data(
             order_action,
             signature,
             timestamp,
@@ -459,201 +442,17 @@ class Exchange(API):
             self.expires_after,
             self.base_url == MAINNET_API_URL,
         )
-        return self._post_action(
-            update_isolated_margin_action,
-            signature,
-            timestamp,
-        )
 
-    def set_referrer(self, code: str) -> Any:
-        timestamp = get_timestamp_ms()
-        set_referrer_action = {
-            "type": "setReferrer",
-            "code": code,
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            set_referrer_action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            set_referrer_action,
-            signature,
-            timestamp,
-        )
-
-    def create_sub_account(self, name: str) -> Any:
-        timestamp = get_timestamp_ms()
-        create_sub_account_action = {
-            "type": "createSubAccount",
-            "name": name,
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            create_sub_account_action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            create_sub_account_action,
-            signature,
-            timestamp,
-        )
-
-    def usd_class_transfer(self, amount: float, to_perp: bool) -> Any:
-        timestamp = get_timestamp_ms()
-        str_amount = str(amount)
-        if self.vault_address:
-            str_amount += f" subaccount:{self.vault_address}"
-
-        action = {
-            "type": "usdClassTransfer",
-            "amount": str_amount,
-            "toPerp": to_perp,
+        payload: Dict[str, Any] = {
+            "action": order_action,
             "nonce": timestamp,
+            "typed_data": typed_data,
+            "vault_address": self.vault_address,
+            "expires_after": self.expires_after,
         }
-        signature = sign_usd_class_transfer_action(self.wallet, action, self.base_url == MAINNET_API_URL)
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
 
-    def send_asset(self, destination: str, source_dex: str, destination_dex: str, token: str, amount: float) -> Any:
-        """
-        For the default perp dex use the empty string "" as name. For spot use "spot".
-        Token must match the collateral token if transferring to or from a perp dex.
-        """
-        timestamp = get_timestamp_ms()
-        str_amount = str(amount)
-
-        action = {
-            "type": "sendAsset",
-            "destination": destination,
-            "sourceDex": source_dex,
-            "destinationDex": destination_dex,
-            "token": token,
-            "amount": str_amount,
-            "fromSubAccount": self.vault_address if self.vault_address else "",
-            "nonce": timestamp,
-        }
-        signature = sign_send_asset_action(self.wallet, action, self.base_url == MAINNET_API_URL)
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
-
-    def sub_account_transfer(self, sub_account_user: str, is_deposit: bool, usd: int) -> Any:
-        timestamp = get_timestamp_ms()
-        sub_account_transfer_action = {
-            "type": "subAccountTransfer",
-            "subAccountUser": sub_account_user,
-            "isDeposit": is_deposit,
-            "usd": usd,
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            sub_account_transfer_action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            sub_account_transfer_action,
-            signature,
-            timestamp,
-        )
-
-    def sub_account_spot_transfer(self, sub_account_user: str, is_deposit: bool, token: str, amount: float) -> Any:
-        timestamp = get_timestamp_ms()
-        sub_account_transfer_action = {
-            "type": "subAccountSpotTransfer",
-            "subAccountUser": sub_account_user,
-            "isDeposit": is_deposit,
-            "token": token,
-            "amount": str(amount),
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            sub_account_transfer_action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            sub_account_transfer_action,
-            signature,
-            timestamp,
-        )
-
-    def vault_usd_transfer(self, vault_address: str, is_deposit: bool, usd: int) -> Any:
-        timestamp = get_timestamp_ms()
-        vault_transfer_action = {
-            "type": "vaultTransfer",
-            "vaultAddress": vault_address,
-            "isDeposit": is_deposit,
-            "usd": usd,
-        }
-        is_mainnet = self.base_url == MAINNET_API_URL
-        signature = sign_l1_action(self.wallet, vault_transfer_action, None, timestamp, self.expires_after, is_mainnet)
-        return self._post_action(
-            vault_transfer_action,
-            signature,
-            timestamp,
-        )
-
-    def usd_transfer(self, amount: float, destination: str) -> Any:
-        timestamp = get_timestamp_ms()
-        action = {"destination": destination, "amount": str(amount), "time": timestamp, "type": "usdSend"}
-        is_mainnet = self.base_url == MAINNET_API_URL
-        signature = sign_usd_transfer_action(self.wallet, action, is_mainnet)
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
-
-    def spot_transfer(self, amount: float, destination: str, token: str) -> Any:
-        timestamp = get_timestamp_ms()
-        action = {
-            "destination": destination,
-            "amount": str(amount),
-            "token": token,
-            "time": timestamp,
-            "type": "spotSend",
-        }
-        is_mainnet = self.base_url == MAINNET_API_URL
-        signature = sign_spot_transfer_action(self.wallet, action, is_mainnet)
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
-
-    def token_delegate(self, validator: str, wei: int, is_undelegate: bool) -> Any:
-        timestamp = get_timestamp_ms()
-        action = {
-            "validator": validator,
-            "wei": wei,
-            "isUndelegate": is_undelegate,
-            "nonce": timestamp,
-            "type": "tokenDelegate",
-        }
-        is_mainnet = self.base_url == MAINNET_API_URL
-        signature = sign_token_delegate_action(self.wallet, action, is_mainnet)
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
+        logging.debug("bulk_orders_tx generated payload: %s", payload)
+        return payload
 
     def withdraw_from_bridge(self, amount: float, destination: str) -> Any:
         timestamp = get_timestamp_ms()
@@ -1040,154 +839,11 @@ class Exchange(API):
             timestamp,
         )
 
-    def c_validator_register(
+    def submit_signed_action(
         self,
-        node_ip: str,
-        name: str,
-        description: str,
-        delegations_disabled: bool,
-        commission_bps: int,
-        signer: str,
-        unjailed: bool,
-        initial_wei: int,
+        action: Dict[str, Any],
+        signature: Dict[str, Any],
+        nonce: int,
     ) -> Any:
-        timestamp = get_timestamp_ms()
-        action = {
-            "type": "CValidatorAction",
-            "register": {
-                "profile": {
-                    "node_ip": {"Ip": node_ip},
-                    "name": name,
-                    "description": description,
-                    "delegations_disabled": delegations_disabled,
-                    "commission_bps": commission_bps,
-                    "signer": signer,
-                },
-                "unjailed": unjailed,
-                "initial_wei": initial_wei,
-            },
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
-
-    def c_validator_change_profile(
-        self,
-        node_ip: Optional[str],
-        name: Optional[str],
-        description: Optional[str],
-        unjailed: bool,
-        disable_delegations: Optional[bool],
-        commission_bps: Optional[int],
-        signer: Optional[str],
-    ) -> Any:
-        timestamp = get_timestamp_ms()
-        action = {
-            "type": "CValidatorAction",
-            "changeProfile": {
-                "node_ip": None if node_ip is None else {"Ip": node_ip},
-                "name": name,
-                "description": description,
-                "unjailed": unjailed,
-                "disable_delegations": disable_delegations,
-                "commission_bps": commission_bps,
-                "signer": signer,
-            },
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
-
-    def c_validator_unregister(self) -> Any:
-        timestamp = get_timestamp_ms()
-        action = {
-            "type": "CValidatorAction",
-            "unregister": None,
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
-
-    def multi_sig(self, multi_sig_user, inner_action, signatures, nonce, vault_address=None):
-        multi_sig_user = multi_sig_user.lower()
-        multi_sig_action = {
-            "type": "multiSig",
-            "signatureChainId": "0x66eee",
-            "signatures": signatures,
-            "payload": {
-                "multiSigUser": multi_sig_user,
-                "outerSigner": self.wallet.address.lower(),
-                "action": inner_action,
-            },
-        }
-        is_mainnet = self.base_url == MAINNET_API_URL
-        signature = sign_multi_sig_action(
-            self.wallet,
-            multi_sig_action,
-            is_mainnet,
-            vault_address,
-            nonce,
-            self.expires_after,
-        )
-        return self._post_action(
-            multi_sig_action,
-            signature,
-            nonce,
-        )
-
-    def use_big_blocks(self, enable: bool) -> Any:
-        timestamp = get_timestamp_ms()
-        action = {
-            "type": "evmUserModify",
-            "usingBigBlocks": enable,
-        }
-        signature = sign_l1_action(
-            self.wallet,
-            action,
-            None,
-            timestamp,
-            self.expires_after,
-            self.base_url == MAINNET_API_URL,
-        )
-        return self._post_action(
-            action,
-            signature,
-            timestamp,
-        )
-
-    def noop(self, nonce):
-        action = {"type": "noop"}
-        signature = sign_l1_action(
-            self.wallet, action, self.vault_address, nonce, self.expires_after, self.base_url == MAINNET_API_URL
-        )
+        """Submit an externally signed action payload to the exchange API."""
         return self._post_action(action, signature, nonce)
