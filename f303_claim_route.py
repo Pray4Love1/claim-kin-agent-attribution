@@ -64,7 +64,7 @@ def main() -> None:
     derived_owner = derive_owner_from_env()
     args = parse_args(derived_owner)
 
-    info = Info(args.base_url, skip_ws=True)
+    info = Info(args.base_url)
 
     if derived_owner:
         print(f"🔐 Derived owner address from PRIVATE_KEY: {derived_owner}")

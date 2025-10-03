@@ -1,4 +1,4 @@
-import example_utils
+exeimport example_utils
 
 from hyperliquid.utils import constants
 

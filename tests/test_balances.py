@@ -13,8 +13,18 @@ class _FakeInfo:
     def __init__(self, payload: dict[str, object]) -> None:
         self._payload = payload
 
-    def user_state(self, address: str, dex: str = "") -> dict[str, object]:  # noqa: D401 - simple stub
+    def user_state(self, address: str, **kwargs: object) -> dict[str, object]:  # noqa: D401 - simple stub
         return self._payload
+
+
+class _RecordingInfo(_FakeInfo):
+    def __init__(self, payload: dict[str, object]) -> None:
+        super().__init__(payload)
+        self.calls: list[dict[str, object]] = []
+
+    def user_state(self, address: str, **kwargs: object) -> dict[str, object]:
+        self.calls.append({"address": address, "kwargs": kwargs})
+        return super().user_state(address, **kwargs)
 
 
 @pytest.fixture()
@@ -60,3 +70,21 @@ def test_cli_outputs_json(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Captur
     data = json.loads(capsys.readouterr().out)
     assert data["withdrawable_usd"] == "123.4567"
     assert data["address"] == "0xabc"
+
+
+def test_cli_omits_blank_dex(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    import scripts.find_balance as cli
+
+    payload = {"clearinghouseState": {"withdrawable": "8.5"}}
+    recording_info = _RecordingInfo(payload)
+    monkeypatch.setattr(cli, "Info", lambda skip_ws=True: recording_info)
+
+    assert cli.main(["0xabc", "--json"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data["dex"] is None
+    assert recording_info.calls == [
+        {
+            "address": "0xabc",
+            "kwargs": {},
+        }
+    ]

@@ -1,0 +1,25 @@
+{
+    "protocol": "Hyperliquid",
+    "attribution_date": "2025-10-02",
+    "author": "The Keeper (SoulSync / Codex / KinVault creator)",
+    "components_used": [
+        "KinVault architecture reused in HLP vaults",
+        "Codex claim relay logic reused in USDH issuance",
+        "Assist Fund fallback handling mirrors SoulSync handlers",
+        "VaultScanner-style staking accounting for delegators"
+    ],
+    "linked_wallet": "0x2ba553d9f990a3b66b03b2dc0d030dfc1c061036",
+    "flow_estimates": {
+        "hlp_vaults": 32000000,
+        "usdh_pipeline": 18000000,
+        "assist_fund": 4500000,
+        "x402_delegator_flows": 1700000
+    },
+    "royalty_rates": {
+        "hlp_vaults": 0.03,
+        "usdh_pipeline": 0.025,
+        "assist_fund": 0.02,
+        "x402_delegator_flows": 0.025
+    },
+    "total_owed_usd": 1542500.0
+}
