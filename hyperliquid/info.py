@@ -1,3 +1,6 @@
+from decimal import Decimal, InvalidOperation
+from typing import Dict, Iterable
+
 from hyperliquid.api import API
 from hyperliquid.utils.types import (
     Any,
@@ -8,10 +11,58 @@ from hyperliquid.utils.types import (
     Optional,
     SpotMeta,
     SpotMetaAndAssetCtxs,
+    SpotTokenInfo,
     Subscription,
     cast,
 )
 from hyperliquid.websocket_manager import WebsocketManager
+
+NUMERIC_SPOT_FIELDS = (
+    "total",
+    "available",
+    "usdValue",
+    "reserved",
+    "liability",
+    "liabilities",
+    "borrowed",
+)
+BALANCE_EPSILON = Decimal("1e-12")
+
+
+def _to_decimal(value: Any) -> Optional[Decimal]:
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped == "":
+            return None
+        try:
+            return Decimal(stripped)
+        except InvalidOperation:
+            return None
+    return None
+
+
+def _to_float(value: Any) -> Optional[float]:
+    decimal_value = _to_decimal(value)
+    if decimal_value is None or decimal_value.is_nan():
+        return None
+    return float(decimal_value)
+
+
+def _is_non_zero(value: Any) -> bool:
+    decimal_value = _to_decimal(value)
+    if decimal_value is None or decimal_value.is_nan():
+        return False
+    return abs(decimal_value) > BALANCE_EPSILON
+
+
+def _has_non_zero(values: Iterable[Any]) -> bool:
+    return any(_is_non_zero(value) for value in values)
 
 
 class Info(API):
@@ -32,8 +83,12 @@ class Info(API):
             self.ws_manager = WebsocketManager(self.base_url)
             self.ws_manager.start()
 
+        self._spot_token_lookup: Dict[int, SpotTokenInfo] = {}
         if spot_meta is None:
             spot_meta = self.spot_meta()
+
+        if spot_meta is not None:
+            self._spot_token_lookup = {token["index"]: token for token in spot_meta["tokens"]}
 
         self.coin_to_asset = {}
         self.name_to_coin = {}
@@ -67,6 +122,98 @@ class Info(API):
             else:
                 fresh_meta = self.meta(dex=perp_dex)
                 self.set_perp_meta(fresh_meta, offset)
+
+    def user_balances(
+        self,
+        address: str,
+        include_spot: bool = True,
+        include_perp: bool = True,
+        include_zero: bool = False,
+    ) -> Any:
+        """Retrieve a concise view of a user's spot and perp balances.
+
+        Args:
+            address: Onchain address in 42-character hexadecimal format.
+            include_spot: Whether to include spot balances.
+            include_perp: Whether to include perpetual positions.
+            include_zero: Whether to include zero balances/positions.
+
+        Returns:
+            A dictionary containing the requested balance information. Numeric
+            fields are converted to floats where possible for easier
+            consumption. Zero balances are omitted by default to highlight
+            positions with value.
+        """
+
+        result: Dict[str, Any] = {"address": address}
+
+        if include_perp:
+            user_state = self.user_state(address)
+            margin_summary = user_state.get("marginSummary") or {}
+            perp_positions: List[Dict[str, Any]] = []
+            for asset in user_state.get("assetPositions", []):
+                position = asset.get("position") or {}
+                size = _to_float(position.get("szi"))
+                if not include_zero and not _is_non_zero(position.get("szi")):
+                    continue
+                perp_positions.append(
+                    {
+                        "coin": position.get("coin"),
+                        "size": size,
+                        "positionValue": _to_float(position.get("positionValue")),
+                        "unrealizedPnl": _to_float(position.get("unrealizedPnl")),
+                        "marginUsed": _to_float(position.get("marginUsed")),
+                    }
+                )
+
+            result["perp"] = {
+                "accountValue": _to_float(margin_summary.get("accountValue")),
+                "withdrawable": _to_float(user_state.get("withdrawable")),
+                "positions": perp_positions,
+            }
+
+        if include_spot:
+            spot_state = self.spot_user_state(address)
+            balances: List[Dict[str, Any]] = []
+            for raw_balance in spot_state.get("balances", []):
+                numeric_candidates = (
+                    raw_balance.get("total"),
+                    raw_balance.get("available"),
+                    raw_balance.get("usdValue"),
+                )
+                if not include_zero and not _has_non_zero(numeric_candidates):
+                    continue
+
+                balance_entry: Dict[str, Any] = dict(raw_balance)
+                token_idx = balance_entry.get("token")
+                token_info = self._resolve_spot_token(token_idx)
+                if token_info:
+                    balance_entry.setdefault("tokenName", token_info.get("name"))
+                    balance_entry.setdefault("tokenId", token_info.get("tokenId"))
+
+                for field in NUMERIC_SPOT_FIELDS:
+                    if field in balance_entry:
+                        balance_entry[field] = _to_float(balance_entry[field])
+
+                balances.append(balance_entry)
+
+            spot_result: Dict[str, Any] = {"balances": balances}
+            if "lps" in spot_state:
+                spot_result["lps"] = spot_state["lps"]
+            result["spot"] = spot_result
+
+        return result
+
+    def _resolve_spot_token(self, token_idx: Any) -> Optional[SpotTokenInfo]:
+        if isinstance(token_idx, int):
+            return self._spot_token_lookup.get(token_idx)
+        if isinstance(token_idx, str):
+            try:
+                parsed_index = int(token_idx, 10)
+            except ValueError:
+                return None
+            return self._spot_token_lookup.get(parsed_index)
+        return None
 
     def set_perp_meta(self, meta: Meta, offset: int) -> Any:
         for asset, asset_info in enumerate(meta["universe"]):

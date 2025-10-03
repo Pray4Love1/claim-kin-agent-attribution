@@ -21,8 +21,12 @@ jobs:
   lint:
     name: 🧹 Lint (pre-commit)
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python-version: ['3.10']
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
