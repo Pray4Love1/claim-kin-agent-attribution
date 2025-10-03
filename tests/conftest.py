@@ -18,12 +18,14 @@ import pytest
 # --------------------------------------------------------------------
 try:
     import requests  # type: ignore
-except ModuleNotFoundError:  # fallback
+except ModuleNotFoundError:
     class _DummySession:
         def __init__(self) -> None:
             self.headers: Dict[str, str] = {}
+
         def post(self, url: str, json: Dict[str, Any] | None = None, timeout: float | None = None):
             raise RuntimeError("Network access is disabled in this environment")
+
     requests = ModuleType("requests")
     requests.Session = _DummySession  # type: ignore[attr-defined]
     requests.HTTPError = RuntimeError  # type: ignore[attr-defined]
@@ -35,9 +37,11 @@ except ModuleNotFoundError:
     class _DummyWebSocketApp:
         def __init__(self, *_args, **_kwargs) -> None:
             self.keep_running = False
+
         def run_forever(self): return None
         def send(self, _msg: str): return None
         def close(self): return None
+
     websocket = ModuleType("websocket")
     websocket.WebSocketApp = _DummyWebSocketApp  # type: ignore[attr-defined]
     sys.modules["websocket"] = websocket
@@ -46,11 +50,11 @@ except ModuleNotFoundError:
 # Hyperliquid API stub
 # --------------------------------------------------------------------
 from hyperliquid.api import API
-from .fake_info_responses import get_response
+from tests.utils.canned_response import get_response  # or .fake_info_responses if you're not using utils
 
 @pytest.fixture(autouse=True)
 def stub_hyperliquid_api(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Replace API.post with deterministic canned responses."""
+    """Replace the API layer with deterministic canned responses."""
     def fake_post(self: API, url_path: str, payload: Dict[str, Any] | None = None) -> Any:
         if url_path != "/info":
             raise RuntimeError(f"Unexpected URL path {url_path!r} in fake API layer")
@@ -58,12 +62,11 @@ def stub_hyperliquid_api(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(API, "post", fake_post)
 
 # --------------------------------------------------------------------
-# Pytest option shims
+# Pytest plugin option shims
 # --------------------------------------------------------------------
 @pytest.hookimpl
 def pytest_addoption(parser: pytest.Parser) -> None:
-    """Register both plugin shims and CI-safe stub options."""
-    # Compatibility shims for missing plugins
+    """Register plugin compatibility options for pytest-recording and pytest-cov."""
     group = parser.getgroup("compatibility")
     group.addoption(
         "--record-mode",
@@ -86,8 +89,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Shim for pytest-cov; reports not generated.",
     )
 
+# --------------------------------------------------------------------
+# Doctest disabling & marker registration
+# --------------------------------------------------------------------
 def pytest_configure(config: pytest.Config) -> None:
-    """Disable doctests & register markers for CI runs."""
     config.addinivalue_line("markers", "vcr: compatibility marker for cassette-backed tests")
     config.option.doctestmodules = False  # type: ignore[attr-defined]
     config.option.doctest_continue_on_failure = False  # type: ignore[attr-defined]
@@ -99,20 +104,3 @@ def pytest_ignore_collect(path, config):  # type: ignore[override]
     except TypeError:
         return False
     return "tests" not in parts and Path(str(path)).suffix == ".py"
-
-  import pytest
-from typing import Any, Dict
-from hyperliquid.api import API
-from tests.utils.canned_response import get_response
-
-
-@pytest.fixture(autouse=True)
-def stub_hyperliquid_api(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Replace the API layer with deterministic canned responses."""
-
-    def fake_post(self: API, url_path: str, payload: Dict[str, Any] | None = None) -> Any:
-        if url_path != "/info":
-            raise RuntimeError(f"Unexpected URL path {url_path!r} in fake API layer")
-        return get_response(payload or {})
-
-    monkeypatch.setattr(API, "post", fake_post)

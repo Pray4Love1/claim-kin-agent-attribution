@@ -6,9 +6,12 @@ eth_account = pytest.importorskip("eth_account")
 
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.constants import MAINNET_API_URL
-from hyperliquid.utils.signing import get_l1_action_data, order_request_to_order_wire, order_wires_to_order_action
+from hyperliquid.utils.signing import (
+    get_l1_action_data,
+    order_request_to_order_wire,
+    order_wires_to_order_action,
+)
 from hyperliquid.utils.types import Meta, SpotMeta
-
 
 TEST_META: Meta = {"universe": [{"name": "ETH", "szDecimals": 4}]}
 TEST_SPOT_META: SpotMeta = {"universe": [], "tokens": {}}
@@ -83,4 +86,3 @@ def test_submit_signed_action_posts_payload(monkeypatch):
     assert captured["payload"]["action"] == action
     assert captured["payload"]["signature"] == signature
     assert captured["payload"]["nonce"] == nonce
-
