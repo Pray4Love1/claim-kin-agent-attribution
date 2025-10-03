@@ -50,7 +50,7 @@ except ModuleNotFoundError:
 # Hyperliquid API stub
 # --------------------------------------------------------------------
 from hyperliquid.api import API
-from tests.utils.canned_response import get_response  # or .fake_info_responses if you're not using utils
+from tests.utils.canned_response import get_response
 
 @pytest.fixture(autouse=True)
 def stub_hyperliquid_api(monkeypatch: pytest.MonkeyPatch) -> None:

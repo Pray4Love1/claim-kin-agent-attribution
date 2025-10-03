@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Mapping, Optional
+from typing import Dict, Iterable, Mapping, Optional, Any
 
-try:  # pragma: no cover
+try:  # pragma: no cover - exercised indirectly in tests
     import requests
-except ModuleNotFoundError:  # fallback
+except ImportError:  # fallback for restricted environments
     class _RequestsStub:
         class HTTPError(RuntimeError): ...
         class Session:  # type: ignore[override]
@@ -22,17 +22,6 @@ except ModuleNotFoundError:  # fallback
     requests = _RequestsStub()  # type: ignore[assignment]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class GitHubAPIError(RuntimeError):
-    """Raised when the GitHub API responds with an unexpected payload."""
-
-
-def _normalise_repo(repo: str) -> str:
-    """Return `owner/name` for GitHub repository strings."""
-    if repo.startswith("https://github.com/"):
-        repo = repo[len("https://github.com/") :]
-    return repo.strip("/")
 
 
 @dataclass(frozen=True)
@@ -114,6 +103,17 @@ def _extract_commit_author_details(commit: Mapping[str, Any]) -> Optional[Commit
     return None
 
 
+class GitHubAPIError(RuntimeError):
+    """Raised when the GitHub API responds with an unexpected payload."""
+
+
+def _normalise_repo(repo: str) -> str:
+    """Return `owner/name` for GitHub repository strings."""
+    if repo.startswith("https://github.com/"):
+        repo = repo[len("https://github.com/") :]
+    return repo.strip("/")
+
+
 @dataclass
 class GitHubSourceControlHistoryItemDetailsProvider:
     """Wrapper around the GitHub commits API with attribution helpers."""
@@ -147,8 +147,8 @@ class GitHubSourceControlHistoryItemDetailsProvider:
             raise GitHubAPIError(f"Unexpected payload for {repo_path}@{sha}: {data!r}")
         return dict(data)
 
-    # Public API ---------------------------------------------------------
     def get_commit_author_details(self, repo: str, sha: str) -> Optional[CommitAuthor]:
+        """Return rich author object."""
         commit = self._get_commit(repo, sha)
         details = _extract_commit_author_details(commit)
         if details is None:
@@ -156,13 +156,12 @@ class GitHubSourceControlHistoryItemDetailsProvider:
         return details
 
     def get_commit_author(self, repo: str, sha: str) -> Optional[str]:
-        """Compatibility helper returning only the preferred identifier string."""
+        """Return the preferred string identifier for a commit (login > name > email)."""
         details = self.get_commit_author_details(repo, sha)
         return details.identifier if details else None
 
-    def get_commit_authors(
-        self, repo: str, shas: Iterable[str]
-    ) -> Dict[str, Optional[CommitAuthor]]:
+    def get_commit_authors(self, repo: str, shas: Iterable[str]) -> Dict[str, Optional[CommitAuthor]]:
+        """Fetch authors for a set of commits."""
         results: Dict[str, Optional[CommitAuthor]] = {}
         repo_path = _normalise_repo(repo)
         for sha in shas:
