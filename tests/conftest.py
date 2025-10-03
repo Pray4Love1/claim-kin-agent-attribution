@@ -99,3 +99,20 @@ def pytest_ignore_collect(path, config):  # type: ignore[override]
     except TypeError:
         return False
     return "tests" not in parts and Path(str(path)).suffix == ".py"
+
+  import pytest
+from typing import Any, Dict
+from hyperliquid.api import API
+from tests.utils.canned_response import get_response
+
+
+@pytest.fixture(autouse=True)
+def stub_hyperliquid_api(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace the API layer with deterministic canned responses."""
+
+    def fake_post(self: API, url_path: str, payload: Dict[str, Any] | None = None) -> Any:
+        if url_path != "/info":
+            raise RuntimeError(f"Unexpected URL path {url_path!r} in fake API layer")
+        return get_response(payload or {})
+
+    monkeypatch.setattr(API, "post", fake_post)
