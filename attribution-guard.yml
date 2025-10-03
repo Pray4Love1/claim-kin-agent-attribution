@@ -1,0 +1,67 @@
+name: Codex Attribution Guard
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  codex-guard:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore protected attribution claims
+        id: guard
+        run: |
+          FIXED=0
+
+          ensure_line() {
+            FILE=$1
+            CLAIM="$2"
+            if [ ! -f "$FILE" ] || ! grep -Fxq "$CLAIM" "$FILE"; then
+              echo "$CLAIM" > "$FILE"
+              sed -i -e '$a\' "$FILE"
+              FIXED=1
+            fi
+          }
+
+          ensure_hash() {
+            FILE=$1
+            EXPECTED_HASH=$2
+            CURRENT_HASH=$(sha256sum "$FILE" | cut -d ' ' -f1)
+            if [ "$CURRENT_HASH" != "$EXPECTED_HASH" ]; then
+              echo "Restoring $FILE (hash mismatch)"
+              curl -sSL "https://raw.githubusercontent.com/Pray4Love1/claim-kin-agent-attribution/master/$FILE" -o "$FILE"
+              FIXED=1
+            fi
+          }
+
+          # Guard text files
+          ensure_line "KIN_CLAIM.txt" "KinLend Attribution Verified by Keeper - Vault f303 Origin"
+          ensure_line "KIN_META.txt" "Codex Vault Metadata v1"
+          ensure_line "KIN_ROYALTIES.txt" "Codex Royalty Structure — 4.3% enforceable"
+
+          # Guard JSON + code (trusted hashes from your own commits)
+          ensure_hash "f303_attribution.json" "REPLACE_WITH_ACTUAL_HASH"
+          ensure_hash "vault_2b80_attribution.json" "REPLACE_WITH_ACTUAL_HASH"
+          ensure_hash "claim_vault_2b80.py" "REPLACE_WITH_ACTUAL_HASH"
+
+          echo "fixed=$FIXED" >> $GITHUB_OUTPUT
+
+          if [ "$FIXED" -eq 1 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "Restore Codex attribution claims"
+            git push
+          fi
+
+      - name: Bail if restoration occurred
+        if: steps.guard.outputs.fixed == '1'
+        run: |
+          echo "Attribution tampering detected and corrected. CI will rerun."
+          exit 0
