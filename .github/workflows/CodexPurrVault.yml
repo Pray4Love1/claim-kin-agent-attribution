@@ -34,8 +34,8 @@ jobs:
             --rpc-url $RPC \
             --verify  # Optional: include if verification is setup
 
-      - name: 📤 Upload Attribution Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload Attribution
+        uses: actions/upload-artifact@v4
         with:
           name: attribution
           path: attribution/PURR_attribution.json
