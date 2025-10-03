@@ -1,5 +1,7 @@
 import pytest
 
+pytest.importorskip("requests")
+
 from hyperliquid.info import Info
 from hyperliquid.utils.types import L2BookData, Meta, SpotMeta
 

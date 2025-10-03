@@ -140,12 +140,12 @@ doctest_optionflags = ["NUMBER", "NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAI
 addopts = [
   "--strict-markers",
   "--tb=short",
-  "--doctest-modules",
-  "--doctest-continue-on-failure",
   "--record-mode=once",
   "--cov-report=html",
   "--cov=hyperliquid"
 ]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
 
 [tool.coverage.run]
 branch = true

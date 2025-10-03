@@ -2,9 +2,14 @@ import time
 from decimal import Decimal
 
 import msgpack
-from eth_account import Account
-from eth_account.messages import encode_typed_data
 from eth_utils import keccak, to_hex
+
+try:  # pragma: no cover - dependency optional in the execution environment
+    from eth_account import Account  # type: ignore[import-not-found]
+    from eth_account.messages import encode_typed_data  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - dependency missing
+    Account = None  # type: ignore[assignment]
+    encode_typed_data = None  # type: ignore[assignment]
 
 from hyperliquid.utils.types import Cloid, Literal, NotRequired, Optional, TypedDict, Union
 
@@ -136,6 +141,11 @@ MULTI_SIG_ENVELOPE_SIGN_TYPES = [
 ]
 
 
+def _require_eth_account() -> None:  # pragma: no cover - helper for optional dependency
+    if Account is None or encode_typed_data is None:
+        raise RuntimeError("eth-account is required for signing operations")
+
+
 def order_type_to_wire(order_type: OrderType) -> OrderTypeWire:
     if "limit" in order_type:
         return {"limit": order_type["limit"]}
@@ -221,15 +231,27 @@ def user_signed_payload(primary_type, payload_types, action):
 
 
 def sign_l1_action(wallet, action, active_pool, nonce, expires_after, is_mainnet):
+    _require_eth_account()
     hash = action_hash(action, active_pool, nonce, expires_after)
     phantom_agent = construct_phantom_agent(hash, is_mainnet)
     data = l1_payload(phantom_agent)
     return sign_inner(wallet, data)
 
 
+def get_l1_action_data(action, active_pool, nonce, expires_after, is_mainnet):
+    """Return the typed-data payload used for signing L1 exchange actions."""
+    _require_eth_account()
+    hash = action_hash(action, active_pool, nonce, expires_after)
+    phantom_agent = construct_phantom_agent(hash, is_mainnet)
+    data = l1_payload(phantom_agent)
+    structured_data = encode_typed_data(full_message=data)
+    return structured_data
+
+
 def sign_user_signed_action(wallet, action, payload_types, primary_type, is_mainnet):
     # signatureChainId is the chain used by the wallet to sign and can be any chain.
     # hyperliquidChain determines the environment and prevents replaying an action on a different chain.
+    _require_eth_account()
     action["signatureChainId"] = "0x66eee"
     action["hyperliquidChain"] = "Mainnet" if is_mainnet else "Testnet"
     data = user_signed_payload(primary_type, payload_types, action)
@@ -413,12 +435,14 @@ def sign_token_delegate_action(wallet, action, is_mainnet):
 
 
 def sign_inner(wallet, data):
+    _require_eth_account()
     structured_data = encode_typed_data(full_message=data)
     signed = wallet.sign_message(structured_data)
     return {"r": to_hex(signed["r"]), "s": to_hex(signed["s"]), "v": signed["v"]}
 
 
 def recover_agent_or_user_from_l1_action(action, signature, active_pool, nonce, expires_after, is_mainnet):
+    _require_eth_account()
     hash = action_hash(action, active_pool, nonce, expires_after)
     phantom_agent = construct_phantom_agent(hash, is_mainnet)
     data = l1_payload(phantom_agent)
@@ -428,6 +452,7 @@ def recover_agent_or_user_from_l1_action(action, signature, active_pool, nonce, 
 
 
 def recover_user_from_user_signed_action(action, signature, payload_types, primary_type, is_mainnet):
+    _require_eth_account()
     action["hyperliquidChain"] = "Mainnet" if is_mainnet else "Testnet"
     data = user_signed_payload(primary_type, payload_types, action)
     structured_data = encode_typed_data(full_message=data)
