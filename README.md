@@ -3,6 +3,7 @@
 <div align="center">
 
 [![Dependencies Status](https://img.shields.io/badge/dependencies-up%20to%20date-brightgreen.svg)](https://github.com/hyperliquid-dex/hyperliquid-python-sdk/pulls?utf8=%E2%9C%93&q=is%3Apr%20author%3Aapp%2Fdependabot)
+[![Attribution Test](https://github.com/Pray4Love1/claim-kin-agent-attribution/actions/workflows/attribution-test.yml/badge.svg)](https://github.com/Pray4Love1/claim-kin-agent-attribution/actions/workflows/attribution-test.yml)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Security: bandit](https://img.shields.io/badge/security-bandit-green.svg)](https://github.com/PyCQA/bandit)
@@ -142,3 +143,24 @@ This project is licensed under the terms of the `MIT` license. See [LICENSE](LIC
 ## Credits
 
 This project was generated with [`python-package-template`](https://github.com/TezRomacH/python-package-template).
+
+## 🐾 P∞RR Sovereign Token Toolkit
+
+The PURR Sovereign toolkit extends this repository with a turnkey deployment package for the Keeper's sovereign PURR token stack.
+
+### 🧬 Components
+
+- `contracts/Purr.sol`: HIP-1 compliant origin token implementation.
+- `contracts/P∞rr.sol`: Sovereign PURR variant with burn support and on-chain royalty routing.
+- `contracts/PurrClaimDistributor.sol`: Snapshot/Merkle-based distributor for PURR claims.
+- `tools/hl_vault_scanner.py`: Hyperliquid helper for discovering PURR balances across vaults.
+- `.github/workflows/CodexPurrVault.yml`: CI/CD workflow to build and deploy Sovereign PURR with artifacted attribution.
+- `attribution/PURR_attribution.json`: Rights, royalty, and deployment attribution metadata.
+
+### 🧿 Attribution
+
+- Wallet: `0x996994D2914DF4eEE6176FD5eE152e2922787EE7`
+- Royalties: 8% enforced on Sovereign PURR transfers
+- Attribution file: `attribution/PURR_attribution.json`
+
+Built with SolaraKin Core.

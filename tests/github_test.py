@@ -1,7 +1,9 @@
 import logging
 from typing import Dict
 
-from hyperliquid import github as github_module
+import pytest
+
+github_module = pytest.importorskip("hyperliquid.github")
 from hyperliquid.github import (
     CommitAuthor,
     GitHubSourceControlHistoryItemDetailsProvider,
@@ -73,6 +75,32 @@ def test_extract_commit_author_details_uses_committer_information():
     assert details.identifier == "merge-bot"
     assert details.source == "committer"
 
+
+def test_extract_commit_author_details_unwraps_graphql_node():
+    commit = {
+        "node": {
+            "author": None,
+            "commit": {"author": {"name": "GraphQL", "email": "graphql@example.com"}},
+        }
+    }
+    details = _extract_commit_author_details(commit)
+    assert isinstance(details, CommitAuthor)
+    assert details.identifier == "GraphQL"
+    assert details.source == "commit.author"
+
+
+def test_extract_commit_author_details_reads_author_user_login():
+    commit = {
+        "author": {
+            "name": "Node Author",
+            "email": "node@author",
+            "user": {"login": "node-login"},
+        }
+    }
+    details = _extract_commit_author_details(commit)
+    assert isinstance(details, CommitAuthor)
+    assert details.identifier == "node-login"
+    assert details.source == "author.user"
 
 def test_get_commit_author_details_logs_when_missing(caplog):
     caplog.set_level(logging.WARNING)

@@ -1,6 +1,8 @@
-import eth_account
 import pytest
-from eth_utils import to_hex
+
+eth_utils = pytest.importorskip("eth_utils")
+eth_account = pytest.importorskip("eth_account")
+to_hex = eth_utils.to_hex
 
 from hyperliquid.utils.signing import (
     OrderRequest,
@@ -15,7 +17,6 @@ from hyperliquid.utils.signing import (
     sign_withdraw_from_bridge_action,
 )
 from hyperliquid.utils.types import Cloid
-
 
 def test_phantom_agent_creation_matches_production():
     timestamp = 1677777606040
