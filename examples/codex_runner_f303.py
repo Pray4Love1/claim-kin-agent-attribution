@@ -1,21 +1,17 @@
-"""Utility helpers for Codex runner output formatting."""
+"""Utility helpers for KinLend vault f303 runner output formatting."""
 
 from __future__ import annotations
-
 from decimal import Decimal
 
 
-def format_withdrawable(withdrawable: str) -> str:
+def format_withdrawable(withdrawable: str | None) -> str:
     """Format withdrawable amounts without scientific notation.
 
-    The API occasionally returns withdrawable balances in decimal strings
-    that represent whole numbers (for example ``"1000"`` or ``"1000.0"``).
-    ``Decimal.normalize`` would emit those values in scientific notation,
-    e.g. ``Decimal("1000").normalize()`` -> ``Decimal("1E+3")`` which is
-    harder to read in CLI output.  Format as a fixed-point decimal, trimming
-    only insignificant trailing zeros so whole-number results remain
-    human-readable.
+    Ensures whole numbers remain human-readable while trimming
+    insignificant trailing zeros.
     """
+    if withdrawable is None:
+        return "Withdrawable: N/A"
 
     withdrawable_decimal = Decimal(withdrawable)
 
@@ -29,4 +25,12 @@ def format_withdrawable(withdrawable: str) -> str:
     return f"Withdrawable: {fixed_point}"
 
 
-__all__ = ["format_withdrawable"]
+DEFAULT_OWNER_ADDRESS = "0xKinLendVaultOwner"   # TODO: update if controller changes
+DEFAULT_VAULT_ID = "f303"
+
+
+__all__ = [
+    "format_withdrawable",
+    "DEFAULT_OWNER_ADDRESS",
+    "DEFAULT_VAULT_ID",
+]

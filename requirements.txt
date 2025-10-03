@@ -1,0 +1,3 @@
+requests
+eth-utils
+eth-hash[pycryptodome]
