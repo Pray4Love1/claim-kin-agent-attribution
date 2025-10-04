@@ -1,0 +1,38 @@
+name: "♻️ Codex Phantom Bot Maintainer"
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  phantom-maintainer:
+    runs-on: ubuntu-latest
+    env:
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      HL_API_URL: https://api.hyperliquid.xyz
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Set up Python 3.12"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "📦 Reinstall Python Dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: "📦 Node Setup (Optional)"
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: "🔁 Phantom Bot CLI Health Check"
+        run: |
+          echo "Verifying phantom bot command interface..."
+          python scripts/codex_phantom_bot.py --help
