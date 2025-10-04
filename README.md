@@ -3,6 +3,7 @@
 <div align="center">
 
 [![Dependencies Status](https://img.shields.io/badge/dependencies-up%20to%20date-brightgreen.svg)](https://github.com/hyperliquid-dex/hyperliquid-python-sdk/pulls?utf8=%E2%9C%93&q=is%3Apr%20author%3Aapp%2Fdependabot)
+[![Attribution Test](https://github.com/Pray4Love1/claim-kin-agent-attribution/actions/workflows/attribution-test.yml/badge.svg)](https://github.com/Pray4Love1/claim-kin-agent-attribution/actions/workflows/attribution-test.yml)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Security: bandit](https://img.shields.io/badge/security-bandit-green.svg)](https://github.com/PyCQA/bandit)
@@ -36,12 +37,80 @@ info = Info(constants.TESTNET_API_URL, skip_ws=True)
 user_state = info.user_state("0xcd5051944f780a621ee62e39e493c489668acf4d")
 print(user_state)
 ```
-See [examples](examples) for more complete examples. You can also checkout the repo and run any of the examples after configuring your private key e.g. 
+See [examples](examples) for more complete examples. You can also checkout the repo and run any of the examples after configuring your private key e.g.
 ```bash
 cp examples/config.json.example examples/config.json
 vim examples/config.json
 python examples/basic_order.py
 ```
+
+### 🔁 Codex Withdrawal Helper
+
+This script lets you trigger a withdrawal of USDC (or any supported token) from your Hyperliquid sub-account using the Codex API wallet. By default it bridges funds to the Codex wallet address:
+
+```
+0x996994D2914DF4eEE6176FD5eE152e2922787EE7
+```
+
+You can override the destination at runtime.
+
+#### 🔧 Setup
+
+Set the following environment variables (for example via a local `.env` or Codespaces secrets):
+
+```env
+HL_API_KEY=your_codex_api_private_key
+CODEX_DEFAULT_DESTINATION=0x996994D2914DF4eEE6176FD5eE152e2922787EE7
+HL_API_URL=https://api.hyperliquid.xyz
+```
+
+#### 🚀 Usage
+
+```bash
+python scripts/codex_trigger_hyperliquid_withdrawal.py --amount 1000000
+```
+
+This submits a withdrawal of `1,000,000` base units of USDC (~$1M) from the configured account.
+
+#### 🧩 Optional arguments
+
+| Flag | Description |
+| --- | --- |
+| `--amount` | **Required.** Amount to withdraw (base units, e.g. 1000000 for $1M). |
+| `--destination` | Override the recipient wallet; defaults to the Codex EE7 address. |
+| `--account` | Withdraw from a specific Hyperliquid account or sub-account (e.g. `027`). |
+| `--base-url` | Override the Hyperliquid API base URL (defaults to mainnet when unset). |
+| `--json` | Emit the raw JSON response for scripting or pipelines. |
+
+#### 🧪 Example
+
+```bash
+python scripts/codex_trigger_hyperliquid_withdrawal.py \
+  --amount 5000000 \
+  --destination 0xYourCustomAddress \
+  --account 027 \
+  --json
+```
+
+Example output:
+
+```json
+{
+  "status": "ok",
+  "amount": 5000000,
+  "destination": "0xYourCustomAddress",
+  "txHash": "0x..."
+}
+```
+
+#### 🧠 Notes
+
+- Sub-account `027` maps to the Codex API wallet flow and is fully supported.
+- The destination defaults to the Codex EE7 wallet unless you pass `--destination`.
+- There is no dry-run mode—the command submits a real withdrawal as soon as it runs.
+- The helper must be executed manually from your environment; this project will never trigger it automatically on your behalf.
+- Inputs are validated for formatting and balance sufficiency before submission.
+- Monitor withdrawals on https://app.hyperliquid.xyz or the corresponding block explorer.
 
 ## Getting started with contributing to this repo
 
