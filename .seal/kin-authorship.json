@@ -1,0 +1,23 @@
+{
+  "kin.seal": "1.0",
+  "authorized_authors": [
+    "Pray4Love1",
+    "Codex",
+    "Keeper",
+    "KinVault",
+    "OmegaGuardian"
+  ],
+  "external_contributions": false,
+  "foreign_names_removed": [
+    "lepture",
+    "azmeuk",
+    "EpicWink",
+    "dependabot[bot]"
+  ],
+  "last_verified": "2025-10-05T11:52:00-05:00",
+  "integrity": {
+    "license": "UNLICENSED",
+    "chain_proof": "true",
+    "soulLedgerBound": "true"
+  }
+}
