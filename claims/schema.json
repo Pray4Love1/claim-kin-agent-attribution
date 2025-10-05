@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Codex Attribution Claim",
+  "type": "object",
+  "properties": {
+    "attribution": { "type": "string" },
+    "wallet_address": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+    "origin": { "type": "string" },
+    "protocol": { "type": "string" },
+    "type": { "type": "string" },
+    "status": { "type": "string" },
+    "verified_via": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "on_chain_linked": { "type": "boolean" },
+    "github_repo": { "type": "string" },
+    "signature": { "type": "string" },
+    "vault_equity_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "vaultAddress": { "type": "string" },
+          "equity": { "type": ["string", "number", "null"] }
+        },
+        "required": ["vaultAddress", "equity"]
+      }
+    }
+  },
+  "required": [
+    "attribution",
+    "wallet_address",
+    "origin",
+    "protocol",
+    "type",
+    "status",
+    "verified_via",
+    "timestamp",
+    "on_chain_linked",
+    "github_repo",
+    "signature"
+  ]
+}

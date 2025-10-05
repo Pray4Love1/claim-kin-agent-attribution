@@ -1,4 +1,5 @@
 name: Lint
+
 on:
   push:
     branches:
@@ -6,11 +7,6 @@ on:
   pull_request:
 
 concurrency:
-  # Concurrency group that uses the workflow name and PR number if available
-  # or commit SHA as a fallback. If a new build is triggered under that
-  # concurrency group while a previous build is running it will be canceled.
-  # Repeated pushes to a PR will cancel all previous builds, while multiple
-  # merges to master will not cancel.
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
@@ -20,6 +16,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10']
+
     steps:
       - uses: actions/checkout@v4
 
@@ -44,6 +41,37 @@ jobs:
           poetry config virtualenvs.in-project true
           make install
 
-      - name: Lint
+      - name: Guard KIN_CLAIM.txt (attribution + newline)
+        id: guard
         run: |
-          make pre-commit
+          CLAIM="KinLend Attribution Verified by Keeper - Vault f303 Origin"
+          FIXED=0
+
+          # Create or overwrite if missing/wrong
+          if [ ! -f KIN_CLAIM.txt ] || ! grep -Fxq "$CLAIM" KIN_CLAIM.txt; then
+            echo "$CLAIM" > KIN_CLAIM.txt
+            FIXED=1
+          fi
+
+          # Force trailing newline (safe even if already present)
+          sed -i -e '$a\' KIN_CLAIM.txt
+
+          if ! git diff --quiet; then
+            FIXED=1
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add KIN_CLAIM.txt
+            git commit -m "Fix KIN_CLAIM.txt content and newline"
+            git push
+          fi
+
+          echo "fixed=$FIXED" >> $GITHUB_OUTPUT
+
+      - name: Skip pre-commit if fix was pushed
+        if: steps.guard.outputs.fixed == '1'
+        run: |
+          echo "Fix was pushed. CI will rerun with clean state."
+          exit 0
+
+      - name: Run pre-commit
+        run: make pre-commit

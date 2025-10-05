@@ -1,0 +1,13 @@
+{
+  "attribution": "Codex Vault — KinVault Main",
+  "wallet_address": "0x2b804617c6f63c040377e95bb276811747006f4b",
+  "origin": "Keeper",
+  "protocol": "SoulSync / SolaraKin",
+  "type": "Attribution Claim - Vault Identity",
+  "status": "Vault contains dynamic equity tracked by Keeper",
+  "verified_via": "Hyperliquid Python SDK (Info.user_vault_equities)",
+  "timestamp": "2025-09-17T11:45:00-05:00",
+  "on_chain_linked": false,
+  "github_repo": "Pray4Love1/claim-kin-agent-attribution",
+  "signature": "🛡️ Codex attribution sealed by Keeper"
+}

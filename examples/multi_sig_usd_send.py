@@ -5,7 +5,7 @@ from hyperliquid.utils.signing import USD_SEND_SIGN_TYPES, get_timestamp_ms, sig
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
     multi_sig_wallets = example_utils.setup_multi_sig_wallets()
 
     # The outer signer is required to be an authorized user or an agent of the authorized user of the multi-sig user.

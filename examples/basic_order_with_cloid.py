@@ -5,7 +5,7 @@ from hyperliquid.utils.types import Cloid
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
 
     cloid = Cloid.from_str("0x00000000000000000000000000000001")
     # Users can also generate a cloid from an int

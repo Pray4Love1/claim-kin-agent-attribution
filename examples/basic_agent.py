@@ -19,7 +19,7 @@ def main():
     """
 
     # Set up the environment (exchange, account info, etc.) for testing purposes.
-    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
 
     # Ensure that the wallet address and account address are the same.
     # If these are not the same then an agent will be approved for the wallet address instead of the account address, and the order will fail.
@@ -41,7 +41,7 @@ def main():
 
     # Create a new exchange instance for the agent, providing it with the agent's account information and exchange URL.
     # This exchange object will be used for placing orders and interacting with the Hyperliquid API.
-    agent_exchange = Exchange(agent_account, constants.MAINNET_API_URL, account_address=address)
+    agent_exchange = Exchange(agent_account, constants.TESTNET_API_URL, account_address=address)
 
     # Place a test order with the agent (setting a very low price so that it rests in the order book).
     # The order is placed as a "limit" order with the time-in-force set to "Good till Cancelled" (GTC).
@@ -69,7 +69,7 @@ def main():
 
     # Create the extra agent account using its private key and the same process as above.
     extra_agent_account: LocalAccount = eth_account.Account.from_key(extra_agent_key)
-    extra_agent_exchange = Exchange(extra_agent_account, constants.MAINNET_API_URL, account_address=address)
+    extra_agent_exchange = Exchange(extra_agent_account, constants.TESTNET_API_URL, account_address=address)
     print("Running with extra agent address:", extra_agent_account.address)
 
     # Place an order with the extra agent using the same process as the original agent.

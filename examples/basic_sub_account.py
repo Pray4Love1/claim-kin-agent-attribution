@@ -1,4 +1,4 @@
-exeimport example_utils
+import example_utils
 
 from hyperliquid.utils import constants
 
@@ -6,7 +6,7 @@ from hyperliquid.utils import constants
 # This example shows how to create, query, and transfer funds to a subaccount.
 # To trade as a subaccount set vault_address to the subaccount's address. See basic_vault.py for an example.
 def main():
-    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
 
     name = "example123"
     print(exchange.create_sub_account(name))

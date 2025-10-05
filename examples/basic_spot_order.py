@@ -10,7 +10,7 @@ OTHER_COIN_NAME = "KORILA/USDC"
 
 
 def main():
-    address, info, exchange = example_utils.setup(base_url=constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(base_url=constants.TESTNET_API_URL, skip_ws=True)
 
     # Get the user state and print out position information
     spot_user_state = info.spot_user_state(address)

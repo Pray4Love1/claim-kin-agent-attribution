@@ -1,3 +1,2 @@
 requests
-eth-utils
-eth-hash[pycryptodome]
+eth_utils

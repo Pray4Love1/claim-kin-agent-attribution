@@ -1,9 +1,19 @@
 {
-    "comments": "…",
     "keystore_path": "",
     "secret_key": "",
-    "account_address": "0x2ba553d9f990a3b66b03b2dc0d030dfc1c061036",
+    "account_address": "",
     "multi_sig": {
-        "authorized_users": []
+        "authorized_users": [
+            {
+                "comment": "signer 1",
+                "secret_key": "",
+                "account_address": ""
+            },
+            {
+                "comment": "signer 2",
+                "secret_key": "",
+                "account_address": ""
+            }
+        ]
     }
 }

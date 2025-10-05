@@ -5,7 +5,7 @@ from hyperliquid.utils.types import Cloid
 
 
 def main():
-    address, info, exchange = example_utils.setup(base_url=constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(base_url=constants.TESTNET_API_URL, skip_ws=True)
 
     cloid = Cloid.from_str("0x00000000000000000000000000000001")
     # Place an order that should rest by setting the price very low

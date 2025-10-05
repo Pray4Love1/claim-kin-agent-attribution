@@ -3,7 +3,6 @@
 <div align="center">
 
 [![Dependencies Status](https://img.shields.io/badge/dependencies-up%20to%20date-brightgreen.svg)](https://github.com/hyperliquid-dex/hyperliquid-python-sdk/pulls?utf8=%E2%9C%93&q=is%3Apr%20author%3Aapp%2Fdependabot)
-[![Attribution Test](https://github.com/Pray4Love1/claim-kin-agent-attribution/actions/workflows/attribution-test.yml/badge.svg)](https://github.com/Pray4Love1/claim-kin-agent-attribution/actions/workflows/attribution-test.yml)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Security: bandit](https://img.shields.io/badge/security-bandit-green.svg)](https://github.com/PyCQA/bandit)
@@ -19,8 +18,9 @@ SDK for Hyperliquid API trading with Python.
 ```bash
 pip install hyperliquid-python-sdk
 ```
-## Configuration 
+## Configuration
 
+- Copy `examples/config.json.example` to `examples/config.json`.
 - Set the public key as the `account_address` in examples/config.json.
 - Set your private key as the `secret_key` in examples/config.json.
 - See the example of loading the config in examples/example_utils.py
@@ -42,28 +42,6 @@ See [examples](examples) for more complete examples. You can also checkout the r
 cp examples/config.json.example examples/config.json
 vim examples/config.json
 python examples/basic_order.py
-```
-
-### Codex runner for KinLend vault f303
-
-Use the dedicated script to print the vault leaderboard entry and clearinghouse
-withdrawable amount that underpins the `claims/f303_attribution.json`
-attestation:
-
-```bash
-python examples/codex_runner_f303.py --owner-address 0xcd5051944f780a621ee62e39e493c489668acf4d
-```
-
-Pass the vault owner address controlling withdrawals with `--owner-address`
-whenever it changes so the reported withdrawable balance stays accurate. Omit
-the flag only if the default matches the active vault controller.
-
-If you prefer to derive the owner from a local wallet, export your private key
-and run the helper at the repository root:
-
-```bash
-export PRIVATE_KEY=0xYourPrivateKey
-python f303_claim_route.py
 ```
 
 ## Getting started with contributing to this repo

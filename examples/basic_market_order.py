@@ -6,7 +6,7 @@ from hyperliquid.utils import constants
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
 
     coin = "ETH"
     is_buy = False

@@ -285,7 +285,7 @@ if SHOULD_LINK_CONTRACT:
         "signature": signature,
         "vaultAddress": None,
     }
-    response = requests.post(constants.MAINNET_API_URL + "/exchange", json=payload, timeout=10)
+    response = requests.post(constants.TESTNET_API_URL + "/exchange", json=payload, timeout=10)
     print(response.json())
 
     use_create_finalization = True
@@ -306,5 +306,5 @@ if SHOULD_LINK_CONTRACT:
         "signature": signature,
         "vaultAddress": None,
     }
-    response = requests.post(constants.MAINNET_API_URL + "/exchange", json=payload, timeout=10)
+    response = requests.post(constants.TESTNET_API_URL + "/exchange", json=payload, timeout=10)
     print(response.json())

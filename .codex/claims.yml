@@ -1,0 +1,10 @@
+claims:
+  - name: KinVault Attribution — Vault 0x2b80
+    address: "0x2b804617c6f63c040377e95bb276811747006f4b"
+    protocol: SoulSync / SolaraKin
+    verified_via: Hyperliquid SDK
+    status: Live
+    timestamp: "2025-09-17T11:45:00-05:00"
+    badge: true
+    metadata_file: claims/vault_2b80_attribution.json
+    signature: "🛡️ Codex attribution sealed by Keeper"

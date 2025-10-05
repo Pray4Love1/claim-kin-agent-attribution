@@ -12,7 +12,7 @@ COIN = f"{DUMMY_DEX}:ABC"
 def main():
     # Supply the builder-deployed perps dex as an argument
     address, info, exchange = example_utils.setup(
-        base_url=constants.MAINNET_API_URL, skip_ws=True, perp_dexs=[DUMMY_DEX]
+        base_url=constants.TESTNET_API_URL, skip_ws=True, perp_dexs=[DUMMY_DEX]
     )
 
     # Get the user state and print out position information

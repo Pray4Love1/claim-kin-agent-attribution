@@ -20,7 +20,7 @@ DUMMY_USER = "0x0000000000000000000000000000000000000001"
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
 
     # Step 1: Registering the Token
     #

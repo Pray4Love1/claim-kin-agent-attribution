@@ -12,7 +12,7 @@ ACTION = ""
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
 
     if ACTION == "Jail":
         jail_result = exchange.c_signer_jail_self()
