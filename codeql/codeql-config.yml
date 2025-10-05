@@ -1,0 +1,10 @@
+name: "Kin Sovereign Scan Config"
+queries:
+  - uses: security-and-quality
+paths:
+  - codex/
+  - sol/
+  - vault/
+paths-ignore:
+  - .venv/
+  - .seal/
