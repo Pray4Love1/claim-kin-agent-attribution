@@ -1,0 +1,36 @@
+name: "🧬 Mesh Scan Across Codex + KinVault + Holo (solidity)"
+
+on:
+  push:
+    branches: [main, keeper-work, codex/**]
+  pull_request:
+    branches: [main, keeper-work, codex/**]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  analyze:
+    name: "CodeQL Security Scan"
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript', 'solidity' ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          config-file: .github/codeql/codeql-config.yml
+          languages: ${{ matrix.language }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
