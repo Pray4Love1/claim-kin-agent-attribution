@@ -1,0 +1,16 @@
+name: "Block Dependabot PRs"
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  block:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close PR from Dependabot
+        run: gh pr close "$PR_URL" --comment "❌ Sovereign attribution enforced. Auto-generated PRs are not accepted."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
